@@ -86,7 +86,12 @@ fn main() {
         framebuffer.clear();
 
         // 1.1 process events
-        process_events(&window, &mut player);
+        // La llamada a la función ahora es más simple.
+        // Ya no devuelve un valor, por lo que no necesitamos capturarlo.
+        process_events(&window, &mut player, &maze, block_size);
+        
+        // Ya no es necesario comprobar si el juego ha terminado.
+
         // 2. draw the maze, passing the maze and block size
         render_maze(&mut framebuffer, &maze, block_size, &player);
 
