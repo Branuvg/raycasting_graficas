@@ -71,21 +71,15 @@ fn main() {
         .log_level(TraceLogLevel::LOG_WARNING)
         .build();
 
-    // --- CORRECCIÓN ---
-    // Se ha añadido el tercer argumento (un Color) a la función `new`.
-    // Esto soluciona el error de compilación.
     let mut framebuffer = Framebuffer::new(
         window_width as i32, 
         window_height as i32, 
         Color::new(50, 50, 100, 255)
     );
 
-    // La siguiente línea ya no es necesaria, ya que el color se establece en la creación.
-    // framebuffer.set_background_color(Color::new(50, 50, 100, 255));
-
     // Load the maze once before the loop
     let maze = load_maze("maze.txt");
-    let mut player = Player{pos: Vector2::new(150.0,150.0), a: PI/3.0,};
+    let mut player = Player{pos: Vector2::new(150.0,150.0), a: PI/2.0,};
 
     while !window.window_should_close() {
         // 1. clear framebuffer

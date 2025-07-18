@@ -7,18 +7,21 @@ pub struct Player {
 }
 
 pub fn process_events(window: &RaylibHandle, player: &mut Player) {
-    const MOVE_SPEED: f32 = 5.0;
+    const MOVE_SPEED: f32 = 10.0;
+    const ROTATION_SPEED: f32 = PI/10.0;
 
     if window.is_key_pressed(KeyboardKey::KEY_LEFT) {
-        player.pos.x -= MOVE_SPEED;
+        player.a -= ROTATION_SPEED;
     }
     if window.is_key_pressed(KeyboardKey::KEY_RIGHT) {
-        player.pos.x += MOVE_SPEED;
+        player.a += ROTATION_SPEED;
     }
     if window.is_key_pressed(KeyboardKey::KEY_UP) {
-        player.pos.y -= MOVE_SPEED;
+        player.pos.x += MOVE_SPEED * player.a.cos();
+        player.pos.y += MOVE_SPEED * player.a.sin();
     }
     if window.is_key_pressed(KeyboardKey::KEY_DOWN) {
-        player.pos.y += MOVE_SPEED;
+        player.pos.x -= MOVE_SPEED * player.a.cos();
+        player.pos.y -= MOVE_SPEED * player.a.sin();
     }
 }
