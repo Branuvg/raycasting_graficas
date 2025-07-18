@@ -5,6 +5,7 @@
 mod framebuffer;
 mod maze;
 mod player;
+mod caster;
 
 use raylib::prelude::*;
 use std::thread;
@@ -12,6 +13,8 @@ use std::time::Duration;
 use player::{Player, process_events};
 use framebuffer::Framebuffer;
 use maze::{Maze,load_maze};
+use caster::cast_ray;
+use std::f32::consts::PI;
 
 
 fn draw_cell(
@@ -48,12 +51,13 @@ pub fn render_maze(
             draw_cell(framebuffer, xo, yo, block_size, cell);
         }
     }
-
     //draw player
     framebuffer.set_current_color(Color::WHITE);
     let px = player.pos.x as i32;
     let py = player.pos.y as i32;
     framebuffer.set_pixel(px, py);
+
+    cast_ray(framebuffer, maze, player, block_size);
 }
 
 fn main() {
@@ -81,7 +85,7 @@ fn main() {
 
     // Load the maze once before the loop
     let maze = load_maze("maze.txt");
-    let mut player = Player{pos: Vector2::new(150.0,150.0),};
+    let mut player = Player{pos: Vector2::new(150.0,150.0), a: PI/3.0,};
 
     while !window.window_should_close() {
         // 1. clear framebuffer

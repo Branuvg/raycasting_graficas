@@ -3,6 +3,7 @@ use std::f32::consts::PI;
 
 pub struct Player {
     pub pos: Vector2,
+    pub a: f32,
 }
 
 pub fn process_events(window: &RaylibHandle, player: &mut Player) {

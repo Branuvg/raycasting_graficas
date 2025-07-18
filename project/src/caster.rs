@@ -1,0 +1,24 @@
+use raylib::prelude::*;
+use player::Player;
+use maze::Maze;
+use framebuffer::Framebuffer;
+
+pub fn cast_ray(framebuffer: &mut Framebuffer, maze: &Maze, player: &Player, block_size: usize) {
+    let mut d = 0.0;
+    framebuffer.set_current_color(Color::WHITE);
+
+    loop {
+        let cos = d * player.a.cos();
+        let sin = d * player.a.sin();
+        let x = (player.pos.x + cos) as usize;
+        let y = (player.pos.y + sin) as usize;
+
+        framebuffer.set_pixel(x as i32, y as i32);
+        d += 0.1;
+
+        if d > 100.0 {
+            break;
+        }
+    }   
+    
+}
