@@ -1,7 +1,7 @@
 use raylib::prelude::*;
-use player::Player;
-use maze::Maze;
-use framebuffer::Framebuffer;
+use crate::player::Player;
+use crate::maze::Maze;
+use crate::framebuffer::Framebuffer;
 
 pub fn cast_ray(framebuffer: &mut Framebuffer, maze: &Maze, player: &Player, block_size: usize) {
     let mut d = 0.0;
