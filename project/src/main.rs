@@ -29,7 +29,7 @@ fn draw_cell(
 
     for x in xo..xo + block_size {
         for y in yo..yo + block_size {
-            framebuffer.set_pixel(x as u32, y as u32);
+            framebuffer.set_pixel(x as i32, y as i32);
         }
     }
 }
@@ -60,7 +60,7 @@ fn main() {
         .log_level(TraceLogLevel::LOG_WARNING)
         .build();
 
-    let mut framebuffer = Framebuffer::new(window_width as u32, window_height as u32);
+    let mut framebuffer = Framebuffer::new(window_width as i32, window_height as i32);
 
     framebuffer.set_background_color(Color::new(50, 50, 100, 255));
 
