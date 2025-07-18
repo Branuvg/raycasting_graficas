@@ -13,12 +13,16 @@ pub fn cast_ray(framebuffer: &mut Framebuffer, maze: &Maze, player: &Player, blo
         let x = (player.pos.x + cos) as usize;
         let y = (player.pos.y + sin) as usize;
 
-        framebuffer.set_pixel(x as i32, y as i32);
-        d += 0.1;
-
-        if d > 100.0 {
-            break;
+        let i = x / block_size;
+        let j = y / block_size;
+        
+        if maze[j][i] != ' ' {
+            break; 
         }
+        
+        framebuffer.set_pixel(x as i32, y as i32);
+        
+        d += 0.1;
     }   
     
 }
