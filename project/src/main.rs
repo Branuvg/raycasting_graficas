@@ -10,7 +10,6 @@ use raylib::prelude::*;
 use std::thread;
 use std::time::Duration;
 use framebuffer::Framebuffer;
-use line::line;
 use maze::{Maze,load_maze};
 
 
@@ -60,9 +59,17 @@ fn main() {
         .log_level(TraceLogLevel::LOG_WARNING)
         .build();
 
-    let mut framebuffer = Framebuffer::new(window_width as i32, window_height as i32);
+    // --- CORRECCIÓN ---
+    // Se ha añadido el tercer argumento (un Color) a la función `new`.
+    // Esto soluciona el error de compilación.
+    let mut framebuffer = Framebuffer::new(
+        window_width as i32, 
+        window_height as i32, 
+        Color::new(50, 50, 100, 255)
+    );
 
-    framebuffer.set_background_color(Color::new(50, 50, 100, 255));
+    // La siguiente línea ya no es necesaria, ya que el color se establece en la creación.
+    // framebuffer.set_background_color(Color::new(50, 50, 100, 255));
 
     // Load the maze once before the loop
     let maze = load_maze("maze.txt");
