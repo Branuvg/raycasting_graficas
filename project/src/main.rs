@@ -2,7 +2,6 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-mod line;
 mod framebuffer;
 mod maze;
 
