@@ -18,7 +18,7 @@ pub fn process_events(
     const MOVE_SPEED: f32 = 10.0;
     const ROTATION_SPEED: f32 = PI / 10.0;
 
-    // --- Rotación (no cambia) ---
+    //Rotación 
     if window.is_key_pressed(KeyboardKey::KEY_LEFT) {
         player.a -= ROTATION_SPEED;
     }
@@ -26,7 +26,7 @@ pub fn process_events(
         player.a += ROTATION_SPEED;
     }
 
-    // --- Movimiento (lógica de colisión modificada) ---
+    //Movimiento
     let mut next_pos = player.pos;
     let mut moved = false;
 
@@ -41,12 +41,12 @@ pub fn process_events(
         moved = true;
     }
 
-    // Si el jugador intentó moverse, verificamos la nueva posición.
+    //Si el jugador intentó moverse, verificamos la nueva posición.
     if moved {
         let grid_x = next_pos.x as usize / block_size;
         let grid_y = next_pos.y as usize / block_size;
 
-        // Verificamos si la nueva posición es un espacio vacío y está dentro de los límites.
+        //Verificamos si la nueva posición es un espacio vacío y está dentro de los límites.
         if grid_y < maze.len() && grid_x < maze[grid_y].len() && maze[grid_y][grid_x] == ' ' {
             // Si el camino está libre, actualizamos la posición del jugador.
             player.pos = next_pos;
