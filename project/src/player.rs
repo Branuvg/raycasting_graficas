@@ -16,7 +16,7 @@ pub fn process_events(
     maze: &Maze,
     block_size: usize,
 ) {
-    const MOVE_SPEED: f32 = 10.0;
+    const MOVE_SPEED: f32 = 8.0;
     const ROTATION_SPEED: f32 = PI / 20.0;
 
     //Rotación 

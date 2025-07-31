@@ -31,7 +31,7 @@ pub fn cast_ray(
             framebuffer.set_pixel(x as i32, y as i32);
         }
         
-        d += 10.0;
+        d += 1.0;
     }
 
     d
