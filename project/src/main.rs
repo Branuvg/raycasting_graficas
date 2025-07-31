@@ -72,6 +72,7 @@ pub fn render_3d(
     maze: &Maze,
     block_size: usize,
     player: &Player,
+    texture_cache: &TextureManager,
 ) {
     let num_rays = framebuffer.width;
 
@@ -93,13 +94,11 @@ pub fn render_3d(
         let stake_bottom = (hh + half_stake_height) as usize;
 
         for y in stake_top..stake_bottom {
-            match c {
-             '+' => framebuffer.set_current_color(Color::new(255, 0, 0, 255)), //red
-             '-' => framebuffer.set_current_color(Color::new(0, 255, 0, 255)), //green
-             '|' => framebuffer.set_current_color(Color::new(0, 0, 255, 255)), //blue
-             _ => framebuffer.set_current_color(Color::new(200, 200, 200, 255)), //gray
-            }
+            let tx = intersect.tx;
+            let ty = (y - stake_top) / (stake_bottom - stake_top);
+            let color = texture_cache.get_pixel_color(c, tx as u32, ty as u32);
 
+            framebuffer.set_current_color(color);
             framebuffer.set_pixel(i, y as i32);
         }
 
@@ -129,8 +128,10 @@ fn main() {
     let mut player = Player{
         pos: Vector2::new(150.0,150.0), 
         a: PI/2.0,
-        fov: PI / 2.0, 
+        fov: PI / 3.0, 
     };
+
+    let texture_cache = TextureManager::new(&mut window, &raylib_thread);
 
     while !window.window_should_close() {
         // 1. clear framebuffer
@@ -149,7 +150,7 @@ fn main() {
         if mode == "2D" {
             render_maze(&mut framebuffer, &maze, block_size, &player);
         } else {
-            render_3d(&mut framebuffer, &maze, block_size, &player);
+            render_3d(&mut framebuffer, &maze, block_size, &player, &texture_cache);
 
         }
 
