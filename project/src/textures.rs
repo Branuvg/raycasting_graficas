@@ -20,6 +20,7 @@ impl TextureManager {
             ('-', "assets/wall2.png"),
             ('|', "assets/wall1.png"),
             ('g', "assets/wall5.png"),
+            ('e', "assets/enemy.png"),
             ('#', "assets/wall3.png"), // default/fallback
         ];
 
