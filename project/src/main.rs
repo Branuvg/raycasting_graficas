@@ -208,6 +208,22 @@ fn main() {
     while !window.window_should_close() {
         // 1. clear framebuffer
         framebuffer.clear();
+        
+        let half_height = window_height as u32 / 2;
+        //cielo
+        framebuffer.set_current_color(Color::new(135, 206, 235, 255));
+        for y in 0..half_height {
+            for x in 0..window_width as u32 {
+                framebuffer.set_pixel(x as i32, y as i32);
+            }
+        }
+        //piso
+        framebuffer.set_current_color(Color::new(180, 70, 40, 255));
+        for y in half_height..window_height as u32 {
+            for x in 0..window_width as u32 {
+                framebuffer.set_pixel(x as i32, y as i32);
+            }
+        }
 
         // 1.1 process events
         process_events(&window, &mut player, &maze, block_size);
