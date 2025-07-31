@@ -8,8 +8,9 @@ pub fn cast_ray(
     maze: &Maze,
     player: &Player,
     a: f32,
-    block_size: usize
-) {
+    block_size: usize,
+    draw: bool,
+) -> f32 {
     let mut d = 0.0;
     framebuffer.set_current_color(Color::WHITE);
 
@@ -26,9 +27,12 @@ pub fn cast_ray(
             break; 
         }
         
-        framebuffer.set_pixel(x as i32, y as i32);
+        if draw {
+            framebuffer.set_pixel(x as i32, y as i32);
+        }
         
         d += 10.0;
-    }   
-    
+    }
+
+    d
 }

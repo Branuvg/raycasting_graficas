@@ -61,8 +61,38 @@ pub fn render_maze(
     for i in 0..num_rays {
         let current_ray = i as f32 / num_rays as f32;
         let  a = (player.a - (player.fov / 2.0)) + (player.fov * current_ray);
-        cast_ray(framebuffer, &maze, &player, a, block_size);
+        cast_ray(framebuffer, &maze, &player, a, block_size, true);
     }
+}
+
+pub fn render_3d(
+    framebuffer: &mut Framebuffer,
+    maze: &Maze,
+    block_size: usize,
+    player: &Player,
+) {
+    let num_rays = framebuffer.width;
+
+    let hh = framebuffer.height as f32/ 2.0;
+
+    framebuffer.set_current_color(Color::RED);
+
+    for i in 0..num_rays {
+        let current_ray = i as f32 / num_rays as f32;
+        let a = (player.a - (player.fov / 2.0)) + (player.fov * current_ray);
+        let d = cast_ray(framebuffer, &maze, &player, a, block_size, false);
+
+        let stake_height = (hh / d)*100.0;
+        let half_stake_height = stake_height / 2.0;
+        let stake_top = (hh - half_stake_height) as usize;
+        let stake_bottom = (hh + half_stake_height) as usize;
+
+        for y in stake_top..stake_bottom {
+            framebuffer.set_pixel(i, y as i32);
+        }
+
+    }
+
 }
 
 fn main() {
@@ -98,7 +128,19 @@ fn main() {
         process_events(&window, &mut player, &maze, block_size);
 
         // 2. draw the maze, passing the maze and block size
-        render_maze(&mut framebuffer, &maze, block_size, &player);
+        let mut mode = "3D";
+        
+        if window.is_key_down(KeyboardKey::KEY_M) {
+            mode = "2D";
+        }
+
+        if mode == "2D" {
+            render_maze(&mut framebuffer, &maze, block_size, &player);
+        } else {
+            render_3d(&mut framebuffer, &maze, block_size, &player);
+
+        }
+
 
         // 3. swap buffers
         framebuffer.swap_buffers(&mut window, &raylib_thread);

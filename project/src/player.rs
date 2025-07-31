@@ -17,13 +17,13 @@ pub fn process_events(
     block_size: usize,
 ) {
     const MOVE_SPEED: f32 = 10.0;
-    const ROTATION_SPEED: f32 = PI / 10.0;
+    const ROTATION_SPEED: f32 = PI / 20.0;
 
     //Rotación 
-    if window.is_key_pressed(KeyboardKey::KEY_LEFT) {
+    if window.is_key_down(KeyboardKey::KEY_LEFT) {
         player.a -= ROTATION_SPEED;
     }
-    if window.is_key_pressed(KeyboardKey::KEY_RIGHT) {
+    if window.is_key_down(KeyboardKey::KEY_RIGHT) {
         player.a += ROTATION_SPEED;
     }
 
@@ -31,12 +31,12 @@ pub fn process_events(
     let mut next_pos = player.pos;
     let mut moved = false;
 
-    if window.is_key_pressed(KeyboardKey::KEY_UP) {
+    if window.is_key_down(KeyboardKey::KEY_UP) {
         next_pos.x += MOVE_SPEED * player.a.cos();
         next_pos.y += MOVE_SPEED * player.a.sin();
         moved = true;
     }
-    if window.is_key_pressed(KeyboardKey::KEY_DOWN) {
+    if window.is_key_down(KeyboardKey::KEY_DOWN) {
         next_pos.x -= MOVE_SPEED * player.a.cos();
         next_pos.y -= MOVE_SPEED * player.a.sin();
         moved = true;
