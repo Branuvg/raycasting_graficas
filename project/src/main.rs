@@ -80,9 +80,10 @@ pub fn render_3d(
     for i in 0..num_rays {
         let current_ray = i as f32 / num_rays as f32;
         let a = (player.a - (player.fov / 2.0)) + (player.fov * current_ray);
+        let angle_diff = a - player.a;
         let d = cast_ray(framebuffer, &maze, &player, a, block_size, false);
-
-        let stake_height = (hh / d)*100.0;
+        let corrected_distance = d * angle_diff.cos() as f32;
+        let stake_height = (hh / corrected_distance)*70.0;
         let half_stake_height = stake_height / 2.0;
         let stake_top = (hh - half_stake_height) as usize;
         let stake_bottom = (hh + half_stake_height) as usize;
