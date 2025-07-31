@@ -55,5 +55,5 @@ impl Framebuffer {
             renderer.clear_background(self.background_color);
             renderer.draw_texture(&texture, 0, 0, Color::WHITE);
         }
-    }
+    } 
 }

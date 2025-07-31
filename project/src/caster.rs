@@ -3,13 +3,19 @@ use crate::player::Player;
 use crate::maze::Maze;
 use crate::framebuffer::Framebuffer;
 
-pub fn cast_ray(framebuffer: &mut Framebuffer, maze: &Maze, player: &Player, block_size: usize) {
+pub fn cast_ray(
+    framebuffer: &mut Framebuffer,
+    maze: &Maze,
+    player: &Player,
+    a: f32,
+    block_size: usize
+) {
     let mut d = 0.0;
     framebuffer.set_current_color(Color::WHITE);
 
     loop {
-        let cos = d * player.a.cos();
-        let sin = d * player.a.sin();
+        let cos = d * a.cos();
+        let sin = d * a.sin();
         let x = (player.pos.x + cos) as usize;
         let y = (player.pos.y + sin) as usize;
 

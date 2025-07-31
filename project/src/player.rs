@@ -6,6 +6,7 @@ use crate::maze::Maze;
 pub struct Player {
     pub pos: Vector2,
     pub a: f32,
+    pub fov: f32,
 }
 
 // La función ya no devuelve un valor booleano. Ahora solo gestiona el movimiento.

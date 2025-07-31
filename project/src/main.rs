@@ -57,7 +57,12 @@ pub fn render_maze(
     let py = player.pos.y as i32;
     framebuffer.set_pixel(px, py);
 
-    cast_ray(framebuffer, maze, player, block_size);
+    let num_rays = 20;
+    for i in 0..num_rays {
+        let current_ray = i as f32 / num_rays as f32;
+        let  a = (player.a - (player.fov / 2.0)) + (player.fov * current_ray);
+        cast_ray(framebuffer, &maze, &player, a, block_size);
+    }
 }
 
 fn main() {
@@ -79,7 +84,11 @@ fn main() {
 
     // Load the maze once before the loop
     let maze = load_maze("maze.txt");
-    let mut player = Player{pos: Vector2::new(150.0,150.0), a: PI/2.0,};
+    let mut player = Player{
+        pos: Vector2::new(150.0,150.0), 
+        a: PI/2.0,
+        fov: PI / 2.0, 
+    };
 
     while !window.window_should_close() {
         // 1. clear framebuffer
