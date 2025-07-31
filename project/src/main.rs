@@ -88,14 +88,14 @@ pub fn render_3d(
         let d = intersect.distance;
         let c = intersect.impact;
         let corrected_distance = d * angle_diff.cos() as f32;
-        let stake_height = (hh / corrected_distance)*70.0;
+        let stake_height = (hh / corrected_distance)*100.0; //factor de escala rendering
         let half_stake_height = stake_height / 2.0;
         let stake_top = (hh - half_stake_height) as usize;
         let stake_bottom = (hh + half_stake_height) as usize;
 
         for y in stake_top..stake_bottom {
             let tx = intersect.tx;
-            let ty = (y - stake_top) / (stake_bottom - stake_top);
+            let ty = ((y as f32 - stake_top as f32) / (stake_bottom as f32 - stake_top as f32))*128.0; //el 128 tiene que ver con el tamaño de la textura (el ancho), cambiar tanto en main como en caster
             let color = texture_cache.get_pixel_color(c, tx as u32, ty as u32);
 
             framebuffer.set_current_color(color);
@@ -122,6 +122,8 @@ fn main() {
         window_height as i32, 
         Color::new(50, 50, 100, 255)
     );
+
+    framebuffer.set_background_color(Color::new(80, 80, 200, 255));
 
     // Load the maze once before the loop
     let maze = load_maze("maze.txt");

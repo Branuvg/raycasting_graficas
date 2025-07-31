@@ -30,8 +30,15 @@ pub fn cast_ray(
         let j = y / block_size;
         
         if maze[j][i] != ' ' {
-            let hit = x - i * block_size;
-            let x = hit * (128 / block_size); //este 128 tiene que ver con el tamaño de la textura (el ancho), cambiar
+            let hitx = x - i * block_size;
+            let hity = y - j * block_size;
+            let mut maxhit = hity;
+
+            if 1 < hitx && hitx < block_size - 1 {
+                maxhit = hitx;
+            }
+
+            let x = ((maxhit as f32* 128.0) / block_size as f32) as usize; //este 128 tiene que ver con el tamaño de la textura (el ancho), cambiar tanto en main como en caster
             return Intersect {
                 distance: d,
                 impact: maze[j][i],
