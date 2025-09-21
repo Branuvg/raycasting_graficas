@@ -55,6 +55,11 @@ impl Framebuffer {
             let mut renderer = window.begin_drawing(raylib_thread);
             renderer.clear_background(self.background_color);
             renderer.draw_texture(&texture, 0, 0, Color::WHITE);
+
+            // --- CÓDIGO AÑADIDO ---
+            // Obtenemos los FPS y los dibujamos en la esquina superior izquierda.
+            let fps = renderer.get_fps();
+            renderer.draw_text(&format!("FPS: {}", fps), 10, 10, 20, Color::LIME);
         }
     } 
 }

@@ -43,7 +43,7 @@ fn draw_sprite(
 
     let sprite_d = ((player.pos.x - enemy.pos.x).powi(2) + (player.pos.y - enemy.pos.y).powi(2)).sqrt();
 
-    // near plane           far plane
+    // near plane              far plane
     if sprite_d < 50.0 || sprite_d > 1000.0 {
         return;
     }
@@ -246,6 +246,6 @@ fn main() {
         // 3. swap buffers
         framebuffer.swap_buffers(&mut window, &raylib_thread);
 
-        thread::sleep(Duration::from_millis(16));
+        // He eliminado la línea `thread::sleep` para obtener una lectura de FPS real.
     }
 }
