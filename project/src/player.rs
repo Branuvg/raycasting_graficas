@@ -17,7 +17,7 @@ pub fn process_events(
     block_size: usize,
 ) {
     const MOVE_SPEED: f32 = 8.0;
-    const ROTATION_SPEED: f32 = PI / 20.0;
+    const ROTATION_SPEED: f32 = PI / 40.0;
 
     //Rotación 
     if window.is_key_down(KeyboardKey::KEY_LEFT) {

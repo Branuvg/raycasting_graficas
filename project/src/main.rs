@@ -26,7 +26,8 @@ fn draw_sprite(
     framebuffer: &mut Framebuffer,
     player: &Player,
     enemy: &Enemy,
-    texture_manager: &TextureManager
+    texture_manager: &TextureManager,
+    flashlight_radius: f32,
 ) {
     let sprite_a = (enemy.pos.y - player.pos.y).atan2(enemy.pos.x - player.pos.x);
     let mut angle_diff = sprite_a - player.a;
@@ -50,6 +51,8 @@ fn draw_sprite(
 
     let screen_height = framebuffer.height as f32;
     let screen_width = framebuffer.width as f32;
+    let screen_center_x = screen_width / 2.0;
+    let screen_center_y = screen_height / 2.0;
 
     let sprite_size = (screen_height / sprite_d) * 70.0;
     let screen_x = ((angle_diff / player.fov) + 0.5) * screen_width;
@@ -68,7 +71,27 @@ fn draw_sprite(
             let color = texture_manager.get_pixel_color(enemy.texture_key, tx, ty);
             
             if color != TRANSPARENT_COLOR {
-                framebuffer.set_current_color(color);
+                // --- LINTERNA --- & Atenuación por distancia para el sprite
+                let dist_from_center = ((x as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
+                
+                let flashlight_brightness = if dist_from_center < flashlight_radius {
+                    let falloff = 1.0 - (dist_from_center / flashlight_radius);
+                    falloff * falloff
+                } else {
+                    0.0
+                };
+                
+                let distance_fade = (1.0 - (sprite_d / 1000.0)).max(0.0);
+                let final_brightness = flashlight_brightness * distance_fade;
+                
+                let final_color = Color::new(
+                    (color.r as f32 * final_brightness) as u8,
+                    (color.g as f32 * final_brightness) as u8,
+                    (color.b as f32 * final_brightness) as u8,
+                    color.a
+                );
+                
+                framebuffer.set_current_color(final_color);
                 framebuffer.set_pixel(x as i32, y as i32);
             }
         }
@@ -129,12 +152,14 @@ pub fn render_3d(
     block_size: usize,
     player: &Player,
     texture_cache: &TextureManager,
+    flashlight_radius: f32,
 ) {
     let num_rays = framebuffer.width;
-
     let hh = framebuffer.height as f32/ 2.0;
+    let screen_width = framebuffer.width as f32;
+    let screen_center_x = screen_width / 2.0;
+    let screen_center_y = hh;
 
-    framebuffer.set_current_color(Color::RED);
 
     for i in 0..num_rays {
         let current_ray = i as f32 / num_rays as f32;
@@ -154,7 +179,27 @@ pub fn render_3d(
             let ty = ((y as f32 - stake_top as f32) / (stake_bottom as f32 - stake_top as f32))*128.0; //el 128 tiene que ver con el tamaño de la textura (el ancho), cambiar tanto en main como en caster
             let color = texture_cache.get_pixel_color(c, tx as u32, ty as u32);
 
-            framebuffer.set_current_color(color);
+            // --- LINTERNA --- & Atenuación por distancia para las paredes
+            let dist_from_center = ((i as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
+
+            let flashlight_brightness = if dist_from_center < flashlight_radius {
+                let falloff = 1.0 - (dist_from_center / flashlight_radius);
+                falloff * falloff
+            } else {
+                0.0
+            };
+            
+            let distance_fade = (1.0 - (corrected_distance / 1000.0)).max(0.0);
+            let final_brightness = flashlight_brightness * distance_fade;
+            
+            let final_color = Color::new(
+                (color.r as f32 * final_brightness) as u8,
+                (color.g as f32 * final_brightness) as u8,
+                (color.b as f32 * final_brightness) as u8,
+                color.a
+            );
+
+            framebuffer.set_current_color(final_color);
             framebuffer.set_pixel(i, y as i32);
         }
 
@@ -166,13 +211,14 @@ fn render_enemies(
     framebuffer: &mut Framebuffer,
     player: &Player,
     texture_cache: &TextureManager,
+    flashlight_radius: f32,
 ) {
     let enemies = vec![
         Enemy::new(250.0, 250.0, 'e'),
     ];
 
     for enemy in enemies {
-        draw_sprite(framebuffer, &player, &enemy, texture_cache);
+        draw_sprite(framebuffer, &player, &enemy, texture_cache, flashlight_radius);
     }
 }
 
@@ -190,10 +236,10 @@ fn main() {
     let mut framebuffer = Framebuffer::new(
         window_width as i32, 
         window_height as i32, 
-        Color::new(50, 50, 100, 255)
+        Color::BLACK
     );
 
-    framebuffer.set_background_color(Color::new(80, 80, 200, 255));
+    framebuffer.set_background_color(Color::BLACK);
 
     // Load the maze once before the loop
     let maze = load_maze("maze.txt");
@@ -204,24 +250,41 @@ fn main() {
     };
 
     let texture_cache = TextureManager::new(&mut window, &raylib_thread);
+    
+    // --- CAMBIO --- Radio del haz de luz aumentado
+    let flashlight_radius = 500.0;
 
     while !window.window_should_close() {
         // 1. clear framebuffer
         framebuffer.clear();
         
-        let half_height = window_height as u32 / 2;
-        //cielo
-        framebuffer.set_current_color(Color::new(135, 206, 235, 255));
-        for y in 0..half_height {
-            for x in 0..window_width as u32 {
-                framebuffer.set_pixel(x as i32, y as i32);
-            }
-        }
-        //piso
-        framebuffer.set_current_color(Color::new(180, 70, 40, 255));
-        for y in half_height..window_height as u32 {
-            for x in 0..window_width as u32 {
-                framebuffer.set_pixel(x as i32, y as i32);
+        let screen_center_x = (window_width / 2) as f32;
+        let screen_center_y = (window_height / 2) as f32;
+        let half_height = (window_height / 2) as i32;
+
+        // --- CAMBIO --- Volvemos a dibujar el piso, pero con efecto de linterna
+        let floor_color = Color::new(51, 25, 0, 255); // Un café oscuro
+        for y in half_height..window_height as i32 {
+            for x in 0..window_width as i32 {
+                let dist_from_center = ((x as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
+                
+                let brightness = if dist_from_center < flashlight_radius {
+                    let falloff = 1.0 - (dist_from_center / flashlight_radius);
+                    // Hacemos que la atenuación sea menos pronunciada para el suelo
+                    falloff
+                } else {
+                    0.0
+                };
+                
+                let final_color = Color::new(
+                    (floor_color.r as f32 * brightness) as u8,
+                    (floor_color.g as f32 * brightness) as u8,
+                    (floor_color.b as f32 * brightness) as u8,
+                    255
+                );
+
+                framebuffer.set_current_color(final_color);
+                framebuffer.set_pixel(x, y);
             }
         }
 
@@ -238,14 +301,12 @@ fn main() {
         if mode == "2D" {
             render_maze(&mut framebuffer, &maze, block_size, &player);
         } else {
-            render_3d(&mut framebuffer, &maze, block_size, &player, &texture_cache);
-            render_enemies(&mut framebuffer, &player, &texture_cache);
+            render_3d(&mut framebuffer, &maze, block_size, &player, &texture_cache, flashlight_radius);
+            render_enemies(&mut framebuffer, &player, &texture_cache, flashlight_radius);
         }
 
 
         // 3. swap buffers
         framebuffer.swap_buffers(&mut window, &raylib_thread);
-
-        // He eliminado la línea `thread::sleep` para obtener una lectura de FPS real.
     }
 }
