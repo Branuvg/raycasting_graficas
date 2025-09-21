@@ -219,6 +219,68 @@ fn render_enemies(
     }
 }
 
+// minimapa
+fn render_minimap(
+    framebuffer: &mut Framebuffer,
+    maze: &Maze,
+    player: &Player,
+    block_size: usize,
+    window_width: i32,
+) {
+    const MINIMAP_SCALE: f32 = 0.15; // Escala del minimapa
+    let map_width = (maze[0].len() as f32 * block_size as f32 * MINIMAP_SCALE) as i32;
+    
+    // Posición en la esquina superior derecha
+    const BORDER_OFFSET: i32 = 10;
+    let offset_x = window_width - map_width - BORDER_OFFSET;
+    let offset_y = BORDER_OFFSET;
+
+    // Dibujar las paredes del laberinto en el minimapa
+    for (j, row) in maze.iter().enumerate() {
+        for (i, &cell) in row.iter().enumerate() {
+            if cell != ' ' {
+                let rect_x = offset_x + (i as f32 * block_size as f32 * MINIMAP_SCALE) as i32;
+                let rect_y = offset_y + (j as f32 * block_size as f32 * MINIMAP_SCALE) as i32;
+                let rect_w = (block_size as f32 * MINIMAP_SCALE) as i32;
+                let rect_h = (block_size as f32 * MINIMAP_SCALE) as i32;
+
+                // Dibujar un rectángulo para cada pared
+                framebuffer.set_current_color(Color::new(100, 100, 100, 180)); // Gris semi-transparente
+                for y_offset in 0..rect_h {
+                    for x_offset in 0..rect_w {
+                        framebuffer.set_pixel(rect_x + x_offset, rect_y + y_offset);
+                    }
+                }
+            }
+        }
+    }
+
+    // Dibujar la posición del jugador en el minimapa
+    let player_map_x = offset_x + (player.pos.x * MINIMAP_SCALE) as i32;
+    let player_map_y = offset_y + (player.pos.y * MINIMAP_SCALE) as i32;
+
+    framebuffer.set_current_color(Color::WHITE);
+    for dy in -2..=2 {
+        for dx in -2..=2 {
+            framebuffer.set_pixel(player_map_x + dx, player_map_y + dy);
+        }
+    }
+
+    // Dibujar la dirección del jugador
+    let line_length = 15.0; // Longitud de la línea de dirección
+    let end_x = player_map_x as f32 + line_length * player.a.cos();
+    let end_y = player_map_y as f32 + line_length * player.a.sin();
+
+    // Dibujar una línea simple
+    for i in 0..15 {
+        let t = i as f32 / 14.0;
+        let x = player_map_x as f32 * (1.0 - t) + end_x * t;
+        let y = player_map_y as f32 * (1.0 - t) + end_y * t;
+        framebuffer.set_pixel(x as i32, y as i32);
+    }
+}
+
+
 fn main() {
     let window_width = 1300;
     let window_height = 900;
@@ -303,6 +365,11 @@ fn main() {
         } else {
             render_3d(&mut framebuffer, &maze, block_size, &player, &texture_cache, flashlight_radius);
             render_enemies(&mut framebuffer, &player, &texture_cache, flashlight_radius);
+        }
+
+        // --- MINIMAPA --- Llamar a la función de renderizado del minimapa
+        if mode != "2D" {
+            render_minimap(&mut framebuffer, &maze, &player, block_size, window_width);
         }
 
         // 3. swap buffers
