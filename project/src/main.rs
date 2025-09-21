@@ -16,12 +16,12 @@ use maze::{Maze,load_maze};
 use caster::{cast_ray, Intersect};
 use std::f32::consts::PI;
 use textures::TextureManager;
-use enemy::Enemy;
+use enemy::{Enemy, TurnPreference};
 
-// Enum para gestionar el estado del juego
 enum GameState {
     Welcome,
     Playing,
+    GameOver,
 }
 
 const TRANSPARENT_COLOR: Color = Color::new(0, 0, 0, 0);
@@ -48,7 +48,6 @@ fn draw_sprite(
 
     let sprite_d = ((player.pos.x - enemy.pos.x).powi(2) + (player.pos.y - enemy.pos.y).powi(2)).sqrt();
 
-    // near plane              far plane
     if sprite_d < 50.0 || sprite_d > 300.0 {
         return;
     }
@@ -111,9 +110,7 @@ fn draw_cell(
     if cell == ' ' {
         return;
     }
-
     framebuffer.set_current_color(Color::RED);
-
     for x in xo..xo + block_size {
         for y in yo..yo + block_size {
             framebuffer.set_pixel(x as i32, y as i32);
@@ -131,20 +128,17 @@ pub fn render_maze(
         for (col_index, &cell) in row.iter().enumerate() {
             let xo = col_index * block_size;
             let yo = row_index * block_size;
-            
             draw_cell(framebuffer, xo, yo, block_size, cell);
         }
     }
-    //draw player
     framebuffer.set_current_color(Color::WHITE);
     let px = player.pos.x as i32;
     let py = player.pos.y as i32;
     framebuffer.set_pixel(px, py);
-
     let num_rays = 20;
     for i in 0..num_rays {
         let current_ray = i as f32 / num_rays as f32;
-        let  a = (player.a - (player.fov / 2.0)) + (player.fov * current_ray);
+        let a = (player.a - (player.fov / 2.0)) + (player.fov * current_ray);
         cast_ray(framebuffer, &maze, &player, a, block_size, true);
     }
 }
@@ -163,7 +157,6 @@ pub fn render_3d(
     let screen_center_x = screen_width / 2.0;
     let screen_center_y = hh;
 
-
     for i in 0..num_rays {
         let current_ray = i as f32 / num_rays as f32;
         let a = (player.a - (player.fov / 2.0)) + (player.fov * current_ray);
@@ -172,7 +165,7 @@ pub fn render_3d(
         let d = intersect.distance;
         let c = intersect.impact;
         let corrected_distance = d * angle_diff.cos() as f32;
-        let stake_height = (hh / corrected_distance)*100.0; //factor de escala rendering
+        let stake_height = (hh / corrected_distance)*100.0;
         let half_stake_height = stake_height / 2.0;
         let stake_top = (hh - half_stake_height) as usize;
         let stake_bottom = (hh + half_stake_height) as usize;
@@ -181,26 +174,19 @@ pub fn render_3d(
             let tx = intersect.tx;
             let ty = ((y as f32 - stake_top as f32) / (stake_bottom as f32 - stake_top as f32))*128.0;
             let color = texture_cache.get_pixel_color(c, tx as u32, ty as u32);
-
             let dist_from_center = ((i as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
-
             let flashlight_brightness = if dist_from_center < flashlight_radius {
                 let falloff = 1.0 - (dist_from_center / flashlight_radius);
                 falloff * falloff
-            } else {
-                0.0
-            };
-            
+            } else { 0.0 };
             let distance_fade = (1.0 - (corrected_distance / 1000.0)).max(0.0);
             let final_brightness = flashlight_brightness * distance_fade;
-            
             let final_color = Color::new(
                 (color.r as f32 * final_brightness) as u8,
                 (color.g as f32 * final_brightness) as u8,
                 (color.b as f32 * final_brightness) as u8,
                 color.a
             );
-
             framebuffer.set_current_color(final_color);
             framebuffer.set_pixel(i, y as i32);
         }
@@ -222,9 +208,11 @@ fn render_enemies(
 fn update_enemies(
     enemies: &mut Vec<Enemy>,
     delta_time: f32,
+    maze: &Maze,
+    block_size: usize,
 ) {
     for enemy in enemies {
-        enemy.update(delta_time);
+        enemy.update(delta_time, maze, block_size);
     }
 }
 
@@ -237,7 +225,6 @@ fn render_minimap(
 ) {
     const MINIMAP_SCALE: f32 = 0.15;
     let map_width = (maze[0].len() as f32 * block_size as f32 * MINIMAP_SCALE) as i32;
-    
     const BORDER_OFFSET: i32 = 10;
     let offset_x = window_width - map_width - BORDER_OFFSET;
     let offset_y = BORDER_OFFSET;
@@ -249,7 +236,6 @@ fn render_minimap(
                 let rect_y = offset_y + (j as f32 * block_size as f32 * MINIMAP_SCALE) as i32;
                 let rect_w = (block_size as f32 * MINIMAP_SCALE) as i32;
                 let rect_h = (block_size as f32 * MINIMAP_SCALE) as i32;
-
                 framebuffer.set_current_color(Color::new(100, 100, 100, 180));
                 for y_offset in 0..rect_h {
                     for x_offset in 0..rect_w {
@@ -262,18 +248,15 @@ fn render_minimap(
 
     let player_map_x = offset_x + (player.pos.x * MINIMAP_SCALE) as i32;
     let player_map_y = offset_y + (player.pos.y * MINIMAP_SCALE) as i32;
-
     framebuffer.set_current_color(Color::YELLOW);
     for dy in -2..=2 {
         for dx in -2..=2 {
             framebuffer.set_pixel(player_map_x + dx, player_map_y + dy);
         }
     }
-
     let line_length = 15.0;
     let end_x = player_map_x as f32 + line_length * player.a.cos();
     let end_y = player_map_y as f32 + line_length * player.a.sin();
-
     for i in 0..15 {
         let t = i as f32 / 14.0;
         let x = player_map_x as f32 * (1.0 - t) + end_x * t;
@@ -282,53 +265,55 @@ fn render_minimap(
     }
 }
 
-// Patalla de bienvenida 
 fn render_welcome_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) {
     d.clear_background(Color::BLACK);
     let title = "BIENVENIDO AL RAYCASTER";
     let title_size = 50;
     let title_x = window_width / 2 - d.measure_text(title, title_size) / 2;
     d.draw_text(title, title_x, 80, title_size, Color::WHITE);
-
     let controls = [
         "Controles:",
         "- Moverse: W/S o Arriba/Abajo",
         "- Girar Camara: A/D, Izquierda/Derecha: Girar o mouse",
         "- Volver a este menú: Esc",
     ];
-
     for (i, &line) in controls.iter().enumerate() {
         d.draw_text(line, 100, 200 + i as i32 * 30, 20, Color::LIGHTGRAY);
     }
-
     let levels = "Selecciona un nivel:";
     let levels_x = window_width / 2 - d.measure_text(levels, 30) / 2;
     d.draw_text(levels, levels_x, window_height - 250, 30, Color::GOLD);
-    
     let easy = "[1] Fácil";
     let easy_x = window_width / 2 - d.measure_text(easy, 25) / 2;
     d.draw_text(easy, easy_x, window_height - 180, 25, Color::GREEN);
-    
     let hard = "[2] Difícil";
     let hard_x = window_width / 2 - d.measure_text(hard, 25) / 2;
     d.draw_text(hard, hard_x, window_height - 130, 25, Color::RED);
+}
+
+fn render_game_over_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) {
+    d.clear_background(Color::BLACK);
+    let msg = "GAME OVER";
+    let msg_size = 100;
+    let msg_x = window_width / 2 - d.measure_text(msg, msg_size) / 2;
+    d.draw_text(msg, msg_x, window_height / 2 - 100, msg_size, Color::RED);
+    let restart_msg = "Presiona ENTER para volver al menú";
+    let restart_size = 25;
+    let restart_x = window_width / 2 - d.measure_text(restart_msg, restart_size) / 2;
+    d.draw_text(restart_msg, restart_x, window_height / 2 + 50, restart_size, Color::WHITE);
 }
 
 fn main() {
     let window_width = 1300;
     let window_height = 900;
     let block_size = 100;
-
     let (mut window, raylib_thread) = raylib::init()
         .size(window_width, window_height)
         .title("Raycaster")
         .log_level(TraceLogLevel::LOG_WARNING)
         .build();
-
     let texture_cache = TextureManager::new(&mut window, &raylib_thread);
     let flashlight_radius = 500.0;
-    
-    //Variables de estado del juego
     let mut game_state = GameState::Welcome;
     let mut maze: Option<Maze> = None;
     let mut player: Option<Player> = None;
@@ -339,22 +324,52 @@ fn main() {
             GameState::Welcome => {
                 window.enable_cursor();
                 let mut selected_maze_file = "";
+                let mut player_start_pos = Vector2::new(0.0, 0.0);
                 
                 if window.is_key_pressed(KeyboardKey::KEY_ONE) {
                     selected_maze_file = "maze.txt";
+                    player_start_pos = Vector2::new(1.5 * block_size as f32, 6.5 * block_size as f32);
+
+                    // --- CAMBIO --- Crear 4 enemigos para el nivel fácil
+                    const EASY_SPEED: f32 = 200.0;
+                    enemies = Some(vec![
+                        Enemy::new(1.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Right, EASY_SPEED),
+                        Enemy::new(7.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Left, EASY_SPEED),
+                        Enemy::new(1.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, EASY_SPEED),
+                        Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, EASY_SPEED),
+                    ]);
                 }
                 if window.is_key_pressed(KeyboardKey::KEY_TWO) {
                     selected_maze_file = "maze_hard.txt";
+                    player_start_pos = Vector2::new(1.5 * block_size as f32, 18.5 * block_size as f32);
+
+                    // --- CAMBIO --- Crear 12 enemigos para el nivel difícil
+                    const HARD_SPEED: f32 = 400.0;
+                    let enemy_positions = [
+                        (1.5, 1.5), (19.5, 1.5), (1.5, 19.5), (19.5, 19.5),
+                        (10.5, 1.5), (1.5, 9.5), (19.5, 9.5), (10.5, 19.5),
+                        (5.5, 5.5), (15.5, 5.5), (5.5, 15.5), (15.5, 15.5),
+                    ];
+                    let mut enemy_vec = Vec::new();
+                    for (i, &(x, y)) in enemy_positions.iter().enumerate() {
+                        let preference = if i % 2 == 0 { TurnPreference::Right } else { TurnPreference::Left };
+                        enemy_vec.push(Enemy::new(
+                            x * block_size as f32,
+                            y * block_size as f32,
+                            preference,
+                            HARD_SPEED
+                        ));
+                    }
+                    enemies = Some(enemy_vec);
                 }
 
                 if !selected_maze_file.is_empty() {
                     maze = Some(load_maze(selected_maze_file));
                     player = Some(Player {
-                        pos: Vector2::new(150.0, 150.0),
-                        a: PI / 2.0,
+                        pos: player_start_pos,
+                        a: -PI / 2.0,
                         fov: PI / 3.0,
                     });
-                    enemies = Some(vec![Enemy::new(250.0, 250.0)]);
                     game_state = GameState::Playing;
                 }
                 
@@ -365,14 +380,11 @@ fn main() {
                 window.disable_cursor();
                 if let (Some(p), Some(m), Some(e)) = (&mut player, &maze, &mut enemies) {
                     let delta_time = window.get_frame_time();
-                    
                     let mut framebuffer = Framebuffer::new(window_width, window_height, Color::BLACK);
                     framebuffer.clear();
-                    
                     let screen_center_x = (window_width / 2) as f32;
                     let screen_center_y = (window_height / 2) as f32;
                     let half_height = (window_height / 2) as i32;
-
                     let floor_color = Color::new(51, 25, 0, 255);
 
                     for y in half_height..window_height as i32 {
@@ -395,7 +407,14 @@ fn main() {
 
                     let mouse_delta_x = window.get_mouse_delta().x;
                     process_events(&window, p, m, block_size, mouse_delta_x);
-                    update_enemies(e, delta_time);
+                    update_enemies(e, delta_time, m, block_size);
+
+                    const COLLISION_DISTANCE: f32 = 25.0;
+                    for enemy in e.iter() {
+                        if p.pos.distance_to(enemy.pos) < COLLISION_DISTANCE {
+                            game_state = GameState::GameOver;
+                        }
+                    }
 
                     let mut mode = "3D";
                     if window.is_key_down(KeyboardKey::KEY_M) { mode = "2D"; }
@@ -417,6 +436,14 @@ fn main() {
                         game_state = GameState::Welcome;
                     }
                 }
+            }
+            GameState::GameOver => {
+                window.enable_cursor();
+                if window.is_key_pressed(KeyboardKey::KEY_ENTER) {
+                    game_state = GameState::Welcome;
+                }
+                let mut d = window.begin_drawing(&raylib_thread);
+                render_game_over_screen(&mut d, window_width, window_height);
             }
         }
     }
