@@ -10,8 +10,6 @@ mod textures;
 mod enemy;
 
 use raylib::prelude::*;
-use std::thread;
-use std::time::Duration;
 use player::{Player, process_events};
 use framebuffer::Framebuffer;
 use maze::{Maze,load_maze};
@@ -207,19 +205,27 @@ pub fn render_3d(
 fn render_enemies(
     framebuffer: &mut Framebuffer,
     player: &Player,
+    enemies: &[Enemy],
     texture_cache: &TextureManager,
     flashlight_radius: f32,
 ) {
-    let enemies = vec![
-        Enemy::new(250.0, 250.0, 'e'), //renderización del enemigo
-    ];
-
     for enemy in enemies {
-        draw_sprite(framebuffer, &player, &enemy, texture_cache, flashlight_radius);
+        draw_sprite(framebuffer, player, enemy, texture_cache, flashlight_radius);
     }
 }
 
-// minimapa
+// Actualiza solo la animación del enemigo, no su posición
+fn update_enemies(
+    enemies: &mut Vec<Enemy>,
+    delta_time: f32,
+) {
+    for enemy in enemies {
+        enemy.update(delta_time);
+    }
+}
+
+
+// --- MINIMAPA --- Nueva función para dibujar el minimapa
 fn render_minimap(
     framebuffer: &mut Framebuffer,
     maze: &Maze,
@@ -259,7 +265,7 @@ fn render_minimap(
     let player_map_x = offset_x + (player.pos.x * MINIMAP_SCALE) as i32;
     let player_map_y = offset_y + (player.pos.y * MINIMAP_SCALE) as i32;
 
-    framebuffer.set_current_color(Color::WHITE);
+    framebuffer.set_current_color(Color::YELLOW);
     for dy in -2..=2 {
         for dx in -2..=2 {
             framebuffer.set_pixel(player_map_x + dx, player_map_y + dy);
@@ -314,7 +320,13 @@ fn main() {
     
     let flashlight_radius = 500.0; //Radio del haz de luz
 
+    let mut enemies = vec![
+        Enemy::new(250.0, 250.0),
+    ];
+
     while !window.window_should_close() {
+        let delta_time = window.get_frame_time();
+
         // 1. clear framebuffer
         framebuffer.clear();
         
@@ -353,6 +365,8 @@ fn main() {
         // 1.1 process events
         process_events(&window, &mut player, &maze, block_size, mouse_delta_x);
 
+        update_enemies(&mut enemies, delta_time);
+
         // 2. draw the maze, passing the maze and block size
         let mut mode = "3D";
         
@@ -364,7 +378,7 @@ fn main() {
             render_maze(&mut framebuffer, &maze, block_size, &player);
         } else {
             render_3d(&mut framebuffer, &maze, block_size, &player, &texture_cache, flashlight_radius);
-            render_enemies(&mut framebuffer, &player, &texture_cache, flashlight_radius);
+            render_enemies(&mut framebuffer, &player, &enemies, &texture_cache, flashlight_radius);
         }
 
         // --- MINIMAPA --- Llamar a la función de renderizado del minimapa
