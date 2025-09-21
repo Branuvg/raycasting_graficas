@@ -1,3 +1,4 @@
+//maze.rs
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 

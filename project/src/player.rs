@@ -1,6 +1,6 @@
+//player.rs
 use raylib::prelude::*;
 use std::f32::consts::PI;
-// Importamos Maze para poder usarlo en la función
 use crate::maze::Maze;
 
 pub struct Player {
