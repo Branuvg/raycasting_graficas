@@ -18,6 +18,12 @@ use std::f32::consts::PI;
 use textures::TextureManager;
 use enemy::Enemy;
 
+// --- CAMBIO --- Enum para gestionar el estado del juego
+enum GameState {
+    Welcome,
+    Playing,
+}
+
 const TRANSPARENT_COLOR: Color = Color::new(0, 0, 0, 0);
 
 fn draw_sprite(
@@ -173,10 +179,9 @@ pub fn render_3d(
 
         for y in stake_top..stake_bottom {
             let tx = intersect.tx;
-            let ty = ((y as f32 - stake_top as f32) / (stake_bottom as f32 - stake_top as f32))*128.0; //el 128 tiene que ver con el tamaño de la textura (el ancho), cambiar tanto en main como en caster
+            let ty = ((y as f32 - stake_top as f32) / (stake_bottom as f32 - stake_top as f32))*128.0;
             let color = texture_cache.get_pixel_color(c, tx as u32, ty as u32);
 
-            // Flashlight
             let dist_from_center = ((i as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
 
             let flashlight_brightness = if dist_from_center < flashlight_radius {
@@ -214,7 +219,6 @@ fn render_enemies(
     }
 }
 
-// Actualiza solo la animación del enemigo, no su posición
 fn update_enemies(
     enemies: &mut Vec<Enemy>,
     delta_time: f32,
@@ -224,8 +228,6 @@ fn update_enemies(
     }
 }
 
-
-// --- MINIMAPA --- Nueva función para dibujar el minimapa
 fn render_minimap(
     framebuffer: &mut Framebuffer,
     maze: &Maze,
@@ -233,15 +235,13 @@ fn render_minimap(
     block_size: usize,
     window_width: i32,
 ) {
-    const MINIMAP_SCALE: f32 = 0.15; // Escala del minimapa
+    const MINIMAP_SCALE: f32 = 0.15;
     let map_width = (maze[0].len() as f32 * block_size as f32 * MINIMAP_SCALE) as i32;
     
-    // Posición en la esquina superior derecha
     const BORDER_OFFSET: i32 = 10;
     let offset_x = window_width - map_width - BORDER_OFFSET;
     let offset_y = BORDER_OFFSET;
 
-    // Dibujar las paredes del laberinto en el minimapa
     for (j, row) in maze.iter().enumerate() {
         for (i, &cell) in row.iter().enumerate() {
             if cell != ' ' {
@@ -250,8 +250,7 @@ fn render_minimap(
                 let rect_w = (block_size as f32 * MINIMAP_SCALE) as i32;
                 let rect_h = (block_size as f32 * MINIMAP_SCALE) as i32;
 
-                // Dibujar un rectángulo para cada pared
-                framebuffer.set_current_color(Color::new(100, 100, 100, 180)); // Gris semi-transparente
+                framebuffer.set_current_color(Color::new(100, 100, 100, 180));
                 for y_offset in 0..rect_h {
                     for x_offset in 0..rect_w {
                         framebuffer.set_pixel(rect_x + x_offset, rect_y + y_offset);
@@ -261,7 +260,6 @@ fn render_minimap(
         }
     }
 
-    // Dibujar la posición del jugador en el minimapa
     let player_map_x = offset_x + (player.pos.x * MINIMAP_SCALE) as i32;
     let player_map_y = offset_y + (player.pos.y * MINIMAP_SCALE) as i32;
 
@@ -272,12 +270,10 @@ fn render_minimap(
         }
     }
 
-    // Dibujar la dirección del jugador
-    let line_length = 15.0; // Longitud de la línea de dirección
+    let line_length = 15.0;
     let end_x = player_map_x as f32 + line_length * player.a.cos();
     let end_y = player_map_y as f32 + line_length * player.a.sin();
 
-    // Dibujar una línea simple
     for i in 0..15 {
         let t = i as f32 / 14.0;
         let x = player_map_x as f32 * (1.0 - t) + end_x * t;
@@ -286,6 +282,37 @@ fn render_minimap(
     }
 }
 
+// --- CAMBIO --- Nueva función para dibujar la pantalla de bienvenida
+fn render_welcome_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) {
+    d.clear_background(Color::BLACK);
+    let title = "BIENVENIDO AL RAYCASTER";
+    let title_size = 50;
+    let title_x = window_width / 2 - d.measure_text(title, title_size) / 2;
+    d.draw_text(title, title_x, 80, title_size, Color::WHITE);
+
+    let controls = [
+        "Controles:",
+        "- Moverse: W/S o Arriba/Abajo",
+        "- Girar Camara: A/D, Izquierda/Derecha: Girar o mouse",
+        "- Volver a este menú: Esc",
+    ];
+
+    for (i, &line) in controls.iter().enumerate() {
+        d.draw_text(line, 100, 200 + i as i32 * 30, 20, Color::LIGHTGRAY);
+    }
+
+    let levels = "Selecciona un nivel:";
+    let levels_x = window_width / 2 - d.measure_text(levels, 30) / 2;
+    d.draw_text(levels, levels_x, window_height - 250, 30, Color::GOLD);
+    
+    let easy = "[1] Fácil";
+    let easy_x = window_width / 2 - d.measure_text(easy, 25) / 2;
+    d.draw_text(easy, easy_x, window_height - 180, 25, Color::GREEN);
+    
+    let hard = "[2] Difícil";
+    let hard_x = window_width / 2 - d.measure_text(hard, 25) / 2;
+    d.draw_text(hard, hard_x, window_height - 130, 25, Color::RED);
+}
 
 fn main() {
     let window_width = 1300;
@@ -298,95 +325,99 @@ fn main() {
         .log_level(TraceLogLevel::LOG_WARNING)
         .build();
 
-    window.disable_cursor();
-
-    let mut framebuffer = Framebuffer::new(
-        window_width as i32, 
-        window_height as i32, 
-        Color::BLACK
-    );
-
-    framebuffer.set_background_color(Color::BLACK);
-
-    // Load the maze once before the loop
-    let maze = load_maze("maze.txt");
-    let mut player = Player{
-        pos: Vector2::new(150.0,150.0), 
-        a: PI/2.0,
-        fov: PI / 3.0, 
-    };
-
     let texture_cache = TextureManager::new(&mut window, &raylib_thread);
+    let flashlight_radius = 500.0;
     
-    let flashlight_radius = 500.0; //Radio del haz de luz
-
-    let mut enemies = vec![
-        Enemy::new(250.0, 250.0),
-    ];
-
+    // --- CAMBIO --- Variables de estado del juego
+    let mut game_state = GameState::Welcome;
+    let mut maze: Option<Maze> = None;
+    let mut player: Option<Player> = None;
+    let mut enemies: Option<Vec<Enemy>> = None;
+    
     while !window.window_should_close() {
-        let delta_time = window.get_frame_time();
-
-        // 1. clear framebuffer
-        framebuffer.clear();
-        
-        let screen_center_x = (window_width / 2) as f32;
-        let screen_center_y = (window_height / 2) as f32;
-        let half_height = (window_height / 2) as i32;
-
-        let floor_color = Color::new(51, 25, 0, 255); // Un café oscuro del piso
-
-        for y in half_height..window_height as i32 {
-            for x in 0..window_width as i32 {
-                let dist_from_center = ((x as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
+        match game_state {
+            GameState::Welcome => {
+                window.enable_cursor();
+                let mut selected_maze_file = "";
                 
-                let brightness = if dist_from_center < flashlight_radius {
-                    let falloff = 1.0 - (dist_from_center / flashlight_radius);
-                    // Hacemos que la atenuación sea menos pronunciada para el suelo
-                    falloff
-                } else {
-                    0.0
-                };
-                
-                let final_color = Color::new(
-                    (floor_color.r as f32 * brightness) as u8,
-                    (floor_color.g as f32 * brightness) as u8,
-                    (floor_color.b as f32 * brightness) as u8,
-                    255
-                );
+                if window.is_key_pressed(KeyboardKey::KEY_ONE) {
+                    selected_maze_file = "maze.txt";
+                }
+                if window.is_key_pressed(KeyboardKey::KEY_TWO) {
+                    selected_maze_file = "maze_hard.txt";
+                }
 
-                framebuffer.set_current_color(final_color);
-                framebuffer.set_pixel(x, y);
+                if !selected_maze_file.is_empty() {
+                    maze = Some(load_maze(selected_maze_file));
+                    player = Some(Player {
+                        pos: Vector2::new(150.0, 150.0),
+                        a: PI / 2.0,
+                        fov: PI / 3.0,
+                    });
+                    enemies = Some(vec![Enemy::new(250.0, 250.0)]);
+                    game_state = GameState::Playing;
+                }
+                
+                let mut d = window.begin_drawing(&raylib_thread);
+                render_welcome_screen(&mut d, window_width, window_height);
+            }
+            GameState::Playing => {
+                window.disable_cursor();
+                if let (Some(p), Some(m), Some(e)) = (&mut player, &maze, &mut enemies) {
+                    let delta_time = window.get_frame_time();
+                    
+                    let mut framebuffer = Framebuffer::new(window_width, window_height, Color::BLACK);
+                    framebuffer.clear();
+                    
+                    let screen_center_x = (window_width / 2) as f32;
+                    let screen_center_y = (window_height / 2) as f32;
+                    let half_height = (window_height / 2) as i32;
+
+                    let floor_color = Color::new(51, 25, 0, 255);
+
+                    for y in half_height..window_height as i32 {
+                        for x in 0..window_width as i32 {
+                            let dist_from_center = ((x as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
+                            let brightness = if dist_from_center < flashlight_radius {
+                                let falloff = 1.0 - (dist_from_center / flashlight_radius);
+                                falloff
+                            } else { 0.0 };
+                            let final_color = Color::new(
+                                (floor_color.r as f32 * brightness) as u8,
+                                (floor_color.g as f32 * brightness) as u8,
+                                (floor_color.b as f32 * brightness) as u8,
+                                255
+                            );
+                            framebuffer.set_current_color(final_color);
+                            framebuffer.set_pixel(x, y);
+                        }
+                    }
+
+                    let mouse_delta_x = window.get_mouse_delta().x;
+                    process_events(&window, p, m, block_size, mouse_delta_x);
+                    update_enemies(e, delta_time);
+
+                    let mut mode = "3D";
+                    if window.is_key_down(KeyboardKey::KEY_M) { mode = "2D"; }
+
+                    if mode == "2D" {
+                        render_maze(&mut framebuffer, m, block_size, p);
+                    } else {
+                        render_3d(&mut framebuffer, m, block_size, p, &texture_cache, flashlight_radius);
+                        render_enemies(&mut framebuffer, p, e, &texture_cache, flashlight_radius);
+                    }
+
+                    if mode != "2D" {
+                        render_minimap(&mut framebuffer, m, p, block_size, window_width);
+                    }
+                    
+                    framebuffer.swap_buffers(&mut window, &raylib_thread);
+
+                    if window.is_key_pressed(KeyboardKey::KEY_ESCAPE) {
+                        game_state = GameState::Welcome;
+                    }
+                }
             }
         }
-
-        let mouse_delta_x = window.get_mouse_delta().x; // Obtener el movimiento horizontal del mouse
-
-        // 1.1 process events
-        process_events(&window, &mut player, &maze, block_size, mouse_delta_x);
-
-        update_enemies(&mut enemies, delta_time);
-
-        // 2. draw the maze, passing the maze and block size
-        let mut mode = "3D";
-        
-        if window.is_key_down(KeyboardKey::KEY_M) {
-            mode = "2D";
-        }
-
-        if mode == "2D" {
-            render_maze(&mut framebuffer, &maze, block_size, &player);
-        } else {
-            render_3d(&mut framebuffer, &maze, block_size, &player, &texture_cache, flashlight_radius);
-            render_enemies(&mut framebuffer, &player, &enemies, &texture_cache, flashlight_radius);
-        }
-
-        // --- MINIMAPA --- Llamar a la función de renderizado del minimapa
-        if mode != "2D" {
-            render_minimap(&mut framebuffer, &maze, &player, block_size, window_width);
-        }
-
-        // 3. swap buffers
-        framebuffer.swap_buffers(&mut window, &raylib_thread);
     }
 }
