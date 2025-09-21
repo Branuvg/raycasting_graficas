@@ -31,9 +31,6 @@ impl Framebuffer {
         }
     }
     
-    // --- CORRECCIÓN ---
-    // Cambiamos &self por &mut self para cumplir con los requisitos del "borrow checker"
-    // y la firma de la función `get_color` de raylib.
     pub fn get_pixel_color(&mut self, x: i32, y: i32) -> Option<Color> {
         if x >= 0 && x < self.width && y >= 0 && y < self.height {
             Some(self.color_buffer.get_color(x, y))
@@ -56,10 +53,9 @@ impl Framebuffer {
             renderer.clear_background(self.background_color);
             renderer.draw_texture(&texture, 0, 0, Color::WHITE);
 
-            // --- CÓDIGO AÑADIDO ---
             // Obtenemos los FPS y los dibujamos en la esquina superior izquierda.
             let fps = renderer.get_fps();
-            renderer.draw_text(&format!("FPS: {}", fps), 10, 10, 20, Color::LIME);
+            renderer.draw_text(&format!("FPS: {}", fps), 10, 10, 20, Color::WHITE);
         }
     } 
 }

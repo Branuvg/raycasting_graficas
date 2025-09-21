@@ -1,7 +1,6 @@
 //player.rs
 use raylib::prelude::*;
 use std::f32::consts::PI;
-// Importamos Maze para poder usarlo en la función
 use crate::maze::Maze;
 
 pub struct Player {
@@ -10,18 +9,15 @@ pub struct Player {
     pub fov: f32,
 }
 
-// La función ya no devuelve un valor booleano. Ahora solo gestiona el movimiento.
 pub fn process_events(
     window: &RaylibHandle,
     player: &mut Player,
     maze: &Maze,
     block_size: usize,
-    // --- CAMBIO --- Nuevo parámetro para el movimiento del ratón
-    mouse_delta_x: f32,
+    mouse_delta_x: f32, //mouse movement
 ) {
     const MOVE_SPEED: f32 = 8.0;
     const ROTATION_SPEED: f32 = PI / 40.0;
-    // --- CAMBIO --- Sensibilidad para la rotación con el ratón
     const MOUSE_SENSITIVITY: f32 = 0.003;
 
     //Rotación con teclado (opcional, se mantiene por si se necesita)
@@ -31,9 +27,14 @@ pub fn process_events(
     if window.is_key_down(KeyboardKey::KEY_RIGHT) {
         player.a += ROTATION_SPEED;
     }
+    if window.is_key_down(KeyboardKey::KEY_A) {
+        player.a -= ROTATION_SPEED;
+    }
+    if window.is_key_down(KeyboardKey::KEY_D) {
+        player.a += ROTATION_SPEED;
+    }
 
-    // --- CAMBIO --- Aplicamos la rotación del ratón al ángulo del jugador
-    player.a += mouse_delta_x * MOUSE_SENSITIVITY;
+    player.a += mouse_delta_x * MOUSE_SENSITIVITY; //Aplicamos la rotación del ratón al ángulo del jugador
 
     //Movimiento
     let mut next_pos = player.pos;
@@ -45,6 +46,16 @@ pub fn process_events(
         moved = true;
     }
     if window.is_key_down(KeyboardKey::KEY_DOWN) {
+        next_pos.x -= MOVE_SPEED * player.a.cos();
+        next_pos.y -= MOVE_SPEED * player.a.sin();
+        moved = true;
+    }
+    if window.is_key_down(KeyboardKey::KEY_W) {
+        next_pos.x += MOVE_SPEED * player.a.cos();
+        next_pos.y += MOVE_SPEED * player.a.sin();
+        moved = true;
+    }
+    if window.is_key_down(KeyboardKey::KEY_S) {
         next_pos.x -= MOVE_SPEED * player.a.cos();
         next_pos.y -= MOVE_SPEED * player.a.sin();
         moved = true;

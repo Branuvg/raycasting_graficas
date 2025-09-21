@@ -45,7 +45,7 @@ fn draw_sprite(
     let sprite_d = ((player.pos.x - enemy.pos.x).powi(2) + (player.pos.y - enemy.pos.y).powi(2)).sqrt();
 
     // near plane              far plane
-    if sprite_d < 50.0 || sprite_d > 1000.0 {
+    if sprite_d < 50.0 || sprite_d > 300.0 {
         return;
     }
 
@@ -71,7 +71,6 @@ fn draw_sprite(
             let color = texture_manager.get_pixel_color(enemy.texture_key, tx, ty);
             
             if color != TRANSPARENT_COLOR {
-                // --- LINTERNA --- & Atenuación por distancia para el sprite
                 let dist_from_center = ((x as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
                 
                 let flashlight_brightness = if dist_from_center < flashlight_radius {
@@ -179,7 +178,7 @@ pub fn render_3d(
             let ty = ((y as f32 - stake_top as f32) / (stake_bottom as f32 - stake_top as f32))*128.0; //el 128 tiene que ver con el tamaño de la textura (el ancho), cambiar tanto en main como en caster
             let color = texture_cache.get_pixel_color(c, tx as u32, ty as u32);
 
-            // --- LINTERNA --- & Atenuación por distancia para las paredes
+            // Flashlight
             let dist_from_center = ((i as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
 
             let flashlight_brightness = if dist_from_center < flashlight_radius {
@@ -202,9 +201,7 @@ pub fn render_3d(
             framebuffer.set_current_color(final_color);
             framebuffer.set_pixel(i, y as i32);
         }
-
     }
-
 }
 
 fn render_enemies(
@@ -214,7 +211,7 @@ fn render_enemies(
     flashlight_radius: f32,
 ) {
     let enemies = vec![
-        Enemy::new(250.0, 250.0, 'e'),
+        Enemy::new(250.0, 250.0, 'e'), //renderización del enemigo
     ];
 
     for enemy in enemies {
@@ -229,11 +226,10 @@ fn main() {
 
     let (mut window, raylib_thread) = raylib::init()
         .size(window_width, window_height)
-        .title("Raycaster Example")
+        .title("Raycaster")
         .log_level(TraceLogLevel::LOG_WARNING)
         .build();
 
-    // --- CAMBIO --- Ocultar y bloquear el cursor para el control de la cámara
     window.disable_cursor();
 
     let mut framebuffer = Framebuffer::new(
@@ -254,8 +250,7 @@ fn main() {
 
     let texture_cache = TextureManager::new(&mut window, &raylib_thread);
     
-    // --- CAMBIO --- Radio del haz de luz aumentado
-    let flashlight_radius = 500.0;
+    let flashlight_radius = 500.0; //Radio del haz de luz
 
     while !window.window_should_close() {
         // 1. clear framebuffer
@@ -265,8 +260,8 @@ fn main() {
         let screen_center_y = (window_height / 2) as f32;
         let half_height = (window_height / 2) as i32;
 
-        // --- CAMBIO --- Volvemos a dibujar el piso, pero con efecto de linterna
-        let floor_color = Color::new(51, 25, 0, 255); // Un café oscuro
+        let floor_color = Color::new(51, 25, 0, 255); // Un café oscuro del piso
+
         for y in half_height..window_height as i32 {
             for x in 0..window_width as i32 {
                 let dist_from_center = ((x as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
@@ -291,11 +286,9 @@ fn main() {
             }
         }
 
-        // --- CAMBIO --- Obtener el movimiento horizontal del ratón en cada fotograma
-        let mouse_delta_x = window.get_mouse_delta().x;
+        let mouse_delta_x = window.get_mouse_delta().x; // Obtener el movimiento horizontal del mouse
 
         // 1.1 process events
-        // --- CAMBIO --- Pasar el movimiento del ratón a la función de eventos
         process_events(&window, &mut player, &maze, block_size, mouse_delta_x);
 
         // 2. draw the maze, passing the maze and block size
@@ -311,7 +304,6 @@ fn main() {
             render_3d(&mut framebuffer, &maze, block_size, &player, &texture_cache, flashlight_radius);
             render_enemies(&mut framebuffer, &player, &texture_cache, flashlight_radius);
         }
-
 
         // 3. swap buffers
         framebuffer.swap_buffers(&mut window, &raylib_thread);
