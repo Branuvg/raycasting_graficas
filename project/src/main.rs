@@ -8,6 +8,8 @@ mod player;
 mod caster;
 mod textures;
 mod enemy;
+// --- NUEVO --- Módulo para coleccionables
+mod collectable;
 
 use raylib::prelude::*;
 use player::{Player, process_events};
@@ -17,40 +19,38 @@ use caster::{cast_ray, Intersect};
 use std::f32::consts::PI;
 use textures::TextureManager;
 use enemy::{Enemy, TurnPreference};
+// --- NUEVO --- Importar la estructura Collectable
+use collectable::Collectable;
 
+// --- CAMBIO --- Añadido el estado de victoria
 enum GameState {
     Welcome,
     Playing,
     GameOver,
+    GameWon,
 }
 
 const TRANSPARENT_COLOR: Color = Color::new(0, 0, 0, 0);
 
-fn draw_sprite(
+// --- CAMBIO --- Generalizada la función para dibujar cualquier sprite
+fn draw_generic_sprite(
     framebuffer: &mut Framebuffer,
     player: &Player,
-    enemy: &Enemy,
+    sprite_pos: Vector2,
+    sprite_texture: char,
     texture_manager: &TextureManager,
     flashlight_radius: f32,
 ) {
-    let sprite_a = (enemy.pos.y - player.pos.y).atan2(enemy.pos.x - player.pos.x);
+    let sprite_a = (sprite_pos.y - player.pos.y).atan2(sprite_pos.x - player.pos.x);
     let mut angle_diff = sprite_a - player.a;
-    while angle_diff > PI {
-        angle_diff -= 2.0 * PI;
-    }
-    while angle_diff < -PI {
-        angle_diff += 2.0 * PI;
-    }
+    while angle_diff > PI { angle_diff -= 2.0 * PI; }
+    while angle_diff < -PI { angle_diff += 2.0 * PI; }
 
-    if angle_diff.abs() > player.fov / 2.0 {
-        return;
-    }
+    if angle_diff.abs() > player.fov / 2.0 { return; }
 
-    let sprite_d = ((player.pos.x - enemy.pos.x).powi(2) + (player.pos.y - enemy.pos.y).powi(2)).sqrt();
+    let sprite_d = player.pos.distance_to(sprite_pos);
 
-    if sprite_d < 50.0 || sprite_d > 300.0 {
-        return;
-    }
+    if sprite_d < 20.0 || sprite_d > 500.0 { return; } // Aumentado el rango de visión para coleccionables
 
     let screen_height = framebuffer.height as f32;
     let screen_width = framebuffer.width as f32;
@@ -71,28 +71,22 @@ fn draw_sprite(
             let tx = ((x - start_x) * 128 / sprite_size_usize) as u32;
             let ty = ((y - start_y) * 128 / sprite_size_usize) as u32;
 
-            let color = texture_manager.get_pixel_color(enemy.texture_key, tx, ty);
+            let color = texture_manager.get_pixel_color(sprite_texture, tx, ty);
             
             if color != TRANSPARENT_COLOR {
                 let dist_from_center = ((x as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
-                
                 let flashlight_brightness = if dist_from_center < flashlight_radius {
                     let falloff = 1.0 - (dist_from_center / flashlight_radius);
                     falloff * falloff
-                } else {
-                    0.0
-                };
-                
+                } else { 0.0 };
                 let distance_fade = (1.0 - (sprite_d / 1000.0)).max(0.0);
                 let final_brightness = flashlight_brightness * distance_fade;
-                
                 let final_color = Color::new(
                     (color.r as f32 * final_brightness) as u8,
                     (color.g as f32 * final_brightness) as u8,
                     (color.b as f32 * final_brightness) as u8,
                     color.a
                 );
-                
                 framebuffer.set_current_color(final_color);
                 framebuffer.set_pixel(x as i32, y as i32);
             }
@@ -100,6 +94,43 @@ fn draw_sprite(
     }
 }
 
+fn render_enemies(
+    framebuffer: &mut Framebuffer,
+    player: &Player,
+    enemies: &[Enemy],
+    texture_cache: &TextureManager,
+    flashlight_radius: f32,
+) {
+    for enemy in enemies {
+        draw_generic_sprite(framebuffer, player, enemy.pos, enemy.texture_key, texture_cache, flashlight_radius);
+    }
+}
+
+// --- NUEVO --- Función para renderizar los coleccionables
+fn render_collectables(
+    framebuffer: &mut Framebuffer,
+    player: &Player,
+    collectables: &[Collectable],
+    texture_cache: &TextureManager,
+    flashlight_radius: f32,
+) {
+    for item in collectables {
+        draw_generic_sprite(framebuffer, player, item.pos, item.texture_key, texture_cache, flashlight_radius);
+    }
+}
+
+fn update_enemies(
+    enemies: &mut Vec<Enemy>,
+    delta_time: f32,
+    maze: &Maze,
+    block_size: usize,
+) {
+    for enemy in enemies {
+        enemy.update(delta_time, maze, block_size);
+    }
+}
+
+// ... (draw_cell y render_maze sin cambios)
 fn draw_cell(
     framebuffer: &mut Framebuffer,
     xo: usize,
@@ -107,9 +138,7 @@ fn draw_cell(
     block_size: usize,
     cell: char,
 ) {
-    if cell == ' ' {
-        return;
-    }
+    if cell == ' ' { return; }
     framebuffer.set_current_color(Color::RED);
     for x in xo..xo + block_size {
         for y in yo..yo + block_size {
@@ -142,6 +171,7 @@ pub fn render_maze(
         cast_ray(framebuffer, &maze, &player, a, block_size, true);
     }
 }
+
 
 pub fn render_3d(
     framebuffer: &mut Framebuffer,
@@ -193,29 +223,6 @@ pub fn render_3d(
     }
 }
 
-fn render_enemies(
-    framebuffer: &mut Framebuffer,
-    player: &Player,
-    enemies: &[Enemy],
-    texture_cache: &TextureManager,
-    flashlight_radius: f32,
-) {
-    for enemy in enemies {
-        draw_sprite(framebuffer, player, enemy, texture_cache, flashlight_radius);
-    }
-}
-
-fn update_enemies(
-    enemies: &mut Vec<Enemy>,
-    delta_time: f32,
-    maze: &Maze,
-    block_size: usize,
-) {
-    for enemy in enemies {
-        enemy.update(delta_time, maze, block_size);
-    }
-}
-
 fn render_minimap(
     framebuffer: &mut Framebuffer,
     maze: &Maze,
@@ -228,7 +235,6 @@ fn render_minimap(
     const BORDER_OFFSET: i32 = 10;
     let offset_x = window_width - map_width - BORDER_OFFSET;
     let offset_y = BORDER_OFFSET;
-
     for (j, row) in maze.iter().enumerate() {
         for (i, &cell) in row.iter().enumerate() {
             if cell != ' ' {
@@ -245,7 +251,6 @@ fn render_minimap(
             }
         }
     }
-
     let player_map_x = offset_x + (player.pos.x * MINIMAP_SCALE) as i32;
     let player_map_y = offset_y + (player.pos.y * MINIMAP_SCALE) as i32;
     framebuffer.set_current_color(Color::YELLOW);
@@ -303,6 +308,19 @@ fn render_game_over_screen(d: &mut RaylibDrawHandle, window_width: i32, window_h
     d.draw_text(restart_msg, restart_x, window_height / 2 + 50, restart_size, Color::WHITE);
 }
 
+// --- NUEVO --- Pantalla de victoria
+fn render_win_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) {
+    d.clear_background(Color::BLACK);
+    let msg = "¡Lo lograste!";
+    let msg_size = 100;
+    let msg_x = window_width / 2 - d.measure_text(msg, msg_size) / 2;
+    d.draw_text(msg, msg_x, window_height / 2 - 100, msg_size, Color::GOLD);
+    let close_msg = "Presiona ENTER para cerrar el juego";
+    let close_size = 25;
+    let close_x = window_width / 2 - d.measure_text(close_msg, close_size) / 2;
+    d.draw_text(close_msg, close_x, window_height / 2 + 50, close_size, Color::WHITE);
+}
+
 fn main() {
     let window_width = 1300;
     let window_height = 900;
@@ -314,23 +332,29 @@ fn main() {
         .build();
     let texture_cache = TextureManager::new(&mut window, &raylib_thread);
     let flashlight_radius = 500.0;
+    
+    // --- CORRECCIÓN --- Crear el framebuffer una sola vez, fuera del bucle.
+    let mut framebuffer = Framebuffer::new(window_width, window_height, Color::BLACK);
+    
     let mut game_state = GameState::Welcome;
     let mut maze: Option<Maze> = None;
     let mut player: Option<Player> = None;
     let mut enemies: Option<Vec<Enemy>> = None;
+    let mut collectables: Option<Vec<Collectable>> = None;
+    let mut score = 0;
+    let mut max_score = 0;
     
     while !window.window_should_close() {
         match game_state {
             GameState::Welcome => {
                 window.enable_cursor();
                 let mut selected_maze_file = "";
-                let mut player_start_pos = Vector2::new(0.0, 0.0);
+                let mut player_start_pos = Vector2::zero();
                 
                 if window.is_key_pressed(KeyboardKey::KEY_ONE) {
                     selected_maze_file = "maze.txt";
                     player_start_pos = Vector2::new(1.5 * block_size as f32, 6.5 * block_size as f32);
-
-                    // --- CAMBIO --- Crear 4 enemigos para el nivel fácil
+                    max_score = 6;
                     const EASY_SPEED: f32 = 200.0;
                     enemies = Some(vec![
                         Enemy::new(1.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Right, EASY_SPEED),
@@ -338,82 +362,88 @@ fn main() {
                         Enemy::new(1.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, EASY_SPEED),
                         Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, EASY_SPEED),
                     ]);
+                    collectables = Some(vec![
+                        Collectable::new(1.5 * block_size as f32, 1.5 * block_size as f32, 'h'),
+                        Collectable::new(5.5 * block_size as f32, 3.5 * block_size as f32, 'h'),
+                        Collectable::new(7.5 * block_size as f32, 3.5 * block_size as f32, 'h'),
+                        Collectable::new(8.0 * block_size as f32, 7.5 * block_size as f32, 'c'),
+                        Collectable::new(3.5 * block_size as f32, 1.5 * block_size as f32, 'c'),
+                        Collectable::new(1.5 * block_size as f32, 5.0 * block_size as f32, 'c'),
+                    ]);
                 }
                 if window.is_key_pressed(KeyboardKey::KEY_TWO) {
                     selected_maze_file = "maze_hard.txt";
                     player_start_pos = Vector2::new(1.5 * block_size as f32, 18.5 * block_size as f32);
-
-                    // --- CAMBIO --- Crear 12 enemigos para el nivel difícil
+                    max_score = 18;
                     const HARD_SPEED: f32 = 400.0;
-                    let enemy_positions = [
-                        (1.5, 1.5), (19.5, 1.5), (1.5, 19.5), (19.5, 19.5),
-                        (10.5, 1.5), (1.5, 9.5), (19.5, 9.5), (10.5, 19.5),
-                        (5.5, 5.5), (15.5, 5.5), (5.5, 15.5), (15.5, 15.5),
-                    ];
+                    let enemy_positions = [ (1.5, 1.5), (19.5, 1.5), (1.5, 19.5), (19.5, 19.5), (10.5, 1.5), (1.5, 9.5), (19.5, 9.5), (10.5, 19.5), (5.5, 5.5), (15.5, 5.5), (5.5, 15.5), (15.5, 15.5) ];
                     let mut enemy_vec = Vec::new();
                     for (i, &(x, y)) in enemy_positions.iter().enumerate() {
                         let preference = if i % 2 == 0 { TurnPreference::Right } else { TurnPreference::Left };
-                        enemy_vec.push(Enemy::new(
-                            x * block_size as f32,
-                            y * block_size as f32,
-                            preference,
-                            HARD_SPEED
-                        ));
+                        enemy_vec.push(Enemy::new(x * block_size as f32, y * block_size as f32, preference, HARD_SPEED));
                     }
                     enemies = Some(enemy_vec);
+                    collectables = Some(vec![
+                        Collectable::new(1.5 * block_size as f32, 1.5 * block_size as f32, 'h'),   Collectable::new(10.5 * block_size as f32, 1.5 * block_size as f32, 'c'),  Collectable::new(19.5 * block_size as f32, 1.5 * block_size as f32, 'h'),
+                        Collectable::new(1.5 * block_size as f32, 5.5 * block_size as f32, 'c'),   Collectable::new(10.5 * block_size as f32, 5.5 * block_size as f32, 'h'),  Collectable::new(19.5 * block_size as f32, 5.5 * block_size as f32, 'c'),
+                        Collectable::new(1.5 * block_size as f32, 9.5 * block_size as f32, 'h'),   Collectable::new(10.5 * block_size as f32, 9.5 * block_size as f32, 'c'),  Collectable::new(19.5 * block_size as f32, 9.5 * block_size as f32, 'h'),
+                        Collectable::new(1.5 * block_size as f32, 13.5 * block_size as f32, 'c'),  Collectable::new(10.5 * block_size as f32, 13.5 * block_size as f32, 'h'), Collectable::new(19.5 * block_size as f32, 13.5 * block_size as f32, 'c'),
+                        Collectable::new(5.5 * block_size as f32, 16.5 * block_size as f32, 'h'),  Collectable::new(15.5 * block_size as f32, 16.5 * block_size as f32, 'c'), Collectable::new(3.5 * block_size as f32, 19.5 * block_size as f32, 'h'),
+                        Collectable::new(8.5 * block_size as f32, 19.5 * block_size as f32, 'c'),  Collectable::new(13.5 * block_size as f32, 19.5 * block_size as f32, 'h'), Collectable::new(18.5 * block_size as f32, 10.5 * block_size as f32, 'c'),
+                    ]);
                 }
 
                 if !selected_maze_file.is_empty() {
                     maze = Some(load_maze(selected_maze_file));
-                    player = Some(Player {
-                        pos: player_start_pos,
-                        a: -PI / 2.0,
-                        fov: PI / 3.0,
-                    });
+                    player = Some(Player { pos: player_start_pos, a: -PI / 2.0, fov: PI / 3.0 });
+                    score = 0;
                     game_state = GameState::Playing;
                 }
-                
                 let mut d = window.begin_drawing(&raylib_thread);
                 render_welcome_screen(&mut d, window_width, window_height);
             }
             GameState::Playing => {
                 window.disable_cursor();
-                if let (Some(p), Some(m), Some(e)) = (&mut player, &maze, &mut enemies) {
+                if let (Some(p), Some(m), Some(e), Some(c)) = (&mut player, &maze, &mut enemies, &mut collectables) {
                     let delta_time = window.get_frame_time();
-                    let mut framebuffer = Framebuffer::new(window_width, window_height, Color::BLACK);
+                    
+                    // --- CORRECCIÓN --- Usar el framebuffer existente en lugar de crear uno nuevo.
                     framebuffer.clear();
+                    
                     let screen_center_x = (window_width / 2) as f32;
                     let screen_center_y = (window_height / 2) as f32;
                     let half_height = (window_height / 2) as i32;
                     let floor_color = Color::new(51, 25, 0, 255);
-
                     for y in half_height..window_height as i32 {
                         for x in 0..window_width as i32 {
                             let dist_from_center = ((x as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
-                            let brightness = if dist_from_center < flashlight_radius {
-                                let falloff = 1.0 - (dist_from_center / flashlight_radius);
-                                falloff
-                            } else { 0.0 };
-                            let final_color = Color::new(
-                                (floor_color.r as f32 * brightness) as u8,
-                                (floor_color.g as f32 * brightness) as u8,
-                                (floor_color.b as f32 * brightness) as u8,
-                                255
-                            );
+                            let brightness = if dist_from_center < flashlight_radius { let falloff = 1.0 - (dist_from_center / flashlight_radius); falloff } else { 0.0 };
+                            let final_color = Color::new((floor_color.r as f32 * brightness) as u8, (floor_color.g as f32 * brightness) as u8, (floor_color.b as f32 * brightness) as u8, 255);
                             framebuffer.set_current_color(final_color);
                             framebuffer.set_pixel(x, y);
                         }
                     }
 
-                    let mouse_delta_x = window.get_mouse_delta().x;
-                    process_events(&window, p, m, block_size, mouse_delta_x);
-                    update_enemies(e, delta_time, m, block_size);
+                    const COLLECT_DISTANCE: f32 = 35.0;
+                    c.retain(|item| {
+                        if p.pos.distance_to(item.pos) < COLLECT_DISTANCE {
+                            score += 1;
+                            false
+                        } else {
+                            true
+                        }
+                    });
 
+                    let goal_unlocked = score >= max_score;
+                    let mouse_delta_x = window.get_mouse_delta().x;
+                    let goal_reached = process_events(&window, p, m, block_size, mouse_delta_x, goal_unlocked);
+
+                    if goal_reached { game_state = GameState::GameWon; }
+
+                    update_enemies(e, delta_time, m, block_size);
                     const COLLISION_DISTANCE: f32 = 25.0;
                     for enemy in e.iter() {
-                        if p.pos.distance_to(enemy.pos) < COLLISION_DISTANCE {
-                            game_state = GameState::GameOver;
-                        }
+                        if p.pos.distance_to(enemy.pos) < COLLISION_DISTANCE { game_state = GameState::GameOver; }
                     }
 
                     let mut mode = "3D";
@@ -424,27 +454,44 @@ fn main() {
                     } else {
                         render_3d(&mut framebuffer, m, block_size, p, &texture_cache, flashlight_radius);
                         render_enemies(&mut framebuffer, p, e, &texture_cache, flashlight_radius);
+                        render_collectables(&mut framebuffer, p, c, &texture_cache, flashlight_radius);
                     }
-
-                    if mode != "2D" {
-                        render_minimap(&mut framebuffer, m, p, block_size, window_width);
-                    }
+                    if mode != "2D" { render_minimap(&mut framebuffer, m, p, block_size, window_width); }
                     
-                    framebuffer.swap_buffers(&mut window, &raylib_thread);
-
-                    if window.is_key_pressed(KeyboardKey::KEY_ESCAPE) {
-                        game_state = GameState::Welcome;
+                    if let Some(texture) = framebuffer.swap_buffers(&mut window, &raylib_thread) {
+                        let mut d = window.begin_drawing(&raylib_thread);
+                        d.clear_background(Color::BLACK);
+                        d.draw_texture(&texture, 0, 0, Color::WHITE);
+                        
+                        let fps = d.get_fps();
+                        d.draw_text(&format!("FPS: {}", fps), 10, 10, 20, Color::WHITE);
+                        
+                        let coords_text = format!("X: {:.1} Y: {:.1}", p.pos.x, p.pos.y);
+                        d.draw_text(&coords_text, 10, 40, 20, Color::WHITE);
+                        
+                        let score_text = format!("{}/{}", score, max_score);
+                        let score_size = 30;
+                        let score_x = window_width / 2 - d.measure_text(&score_text, score_size) / 2;
+                        d.draw_text(&score_text, score_x, 10, score_size, Color::GOLD);
                     }
+                    if window.is_key_pressed(KeyboardKey::KEY_ESCAPE) { game_state = GameState::Welcome; }
                 }
             }
             GameState::GameOver => {
                 window.enable_cursor();
-                if window.is_key_pressed(KeyboardKey::KEY_ENTER) {
-                    game_state = GameState::Welcome;
-                }
+                if window.is_key_pressed(KeyboardKey::KEY_ENTER) { game_state = GameState::Welcome; }
                 let mut d = window.begin_drawing(&raylib_thread);
                 render_game_over_screen(&mut d, window_width, window_height);
+            }
+            GameState::GameWon => {
+                window.enable_cursor();
+                if window.is_key_pressed(KeyboardKey::KEY_ENTER) {
+                    break;
+                }
+                let mut d = window.begin_drawing(&raylib_thread);
+                render_win_screen(&mut d, window_width, window_height);
             }
         }
     }
 }
+

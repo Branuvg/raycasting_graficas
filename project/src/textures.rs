@@ -21,6 +21,8 @@ impl TextureManager {
             ('g', "assets/wall5.png"),
             ('e', "assets/enemy1.png"),
             ('f', "assets/enemy2.png"),
+            ('c', "assets/box.png"),
+            ('h', "assets/gun.png"),
             ('#', "assets/wall3.png"), // default/fallback
         ];
 

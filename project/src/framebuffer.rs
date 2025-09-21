@@ -47,15 +47,8 @@ impl Framebuffer {
         self.current_color = color;
     }
 
-    pub fn swap_buffers(&self, window: &mut RaylibHandle, raylib_thread: &RaylibThread) {
-        if let Ok(texture) = window.load_texture_from_image(raylib_thread, &self.color_buffer) {
-            let mut renderer = window.begin_drawing(raylib_thread);
-            renderer.clear_background(self.background_color);
-            renderer.draw_texture(&texture, 0, 0, Color::WHITE);
-
-            // Obtenemos los FPS y los dibujamos en la esquina superior izquierda.
-            let fps = renderer.get_fps();
-            renderer.draw_text(&format!("FPS: {}", fps), 10, 10, 20, Color::WHITE);
-        }
-    } 
+    // --- CAMBIO --- Eliminada la lógica de dibujado de FPS
+    pub fn swap_buffers(&self, window: &mut RaylibHandle, raylib_thread: &RaylibThread) -> Option<Texture2D> {
+        window.load_texture_from_image(raylib_thread, &self.color_buffer).ok()
+    }
 }
