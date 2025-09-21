@@ -233,6 +233,9 @@ fn main() {
         .log_level(TraceLogLevel::LOG_WARNING)
         .build();
 
+    // --- CAMBIO --- Ocultar y bloquear el cursor para el control de la cámara
+    window.disable_cursor();
+
     let mut framebuffer = Framebuffer::new(
         window_width as i32, 
         window_height as i32, 
@@ -288,8 +291,12 @@ fn main() {
             }
         }
 
+        // --- CAMBIO --- Obtener el movimiento horizontal del ratón en cada fotograma
+        let mouse_delta_x = window.get_mouse_delta().x;
+
         // 1.1 process events
-        process_events(&window, &mut player, &maze, block_size);
+        // --- CAMBIO --- Pasar el movimiento del ratón a la función de eventos
+        process_events(&window, &mut player, &maze, block_size, mouse_delta_x);
 
         // 2. draw the maze, passing the maze and block size
         let mut mode = "3D";
