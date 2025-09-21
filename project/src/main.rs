@@ -18,7 +18,7 @@ use std::f32::consts::PI;
 use textures::TextureManager;
 use enemy::Enemy;
 
-// --- CAMBIO --- Enum para gestionar el estado del juego
+// Enum para gestionar el estado del juego
 enum GameState {
     Welcome,
     Playing,
@@ -282,7 +282,7 @@ fn render_minimap(
     }
 }
 
-// --- CAMBIO --- Nueva función para dibujar la pantalla de bienvenida
+// Patalla de bienvenida 
 fn render_welcome_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) {
     d.clear_background(Color::BLACK);
     let title = "BIENVENIDO AL RAYCASTER";
@@ -328,7 +328,7 @@ fn main() {
     let texture_cache = TextureManager::new(&mut window, &raylib_thread);
     let flashlight_radius = 500.0;
     
-    // --- CAMBIO --- Variables de estado del juego
+    //Variables de estado del juego
     let mut game_state = GameState::Welcome;
     let mut maze: Option<Maze> = None;
     let mut player: Option<Player> = None;
