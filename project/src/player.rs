@@ -9,14 +9,13 @@ pub struct Player {
     pub fov: f32,
 }
 
-// --- CAMBIO --- La función ahora devuelve un booleano para indicar si se ha alcanzado la meta
-pub fn process_events(
+pub fn process_events( //Comprobar si el jugador ha llegado a la meta
     window: &RaylibHandle,
     player: &mut Player,
     maze: &Maze,
     block_size: usize,
     mouse_delta_x: f32,
-    goal_unlocked: bool, // Nuevo parámetro para saber si se puede terminar
+    goal_unlocked: bool,
 ) -> bool {
     const MOVE_SPEED: f32 = 8.0;
     const ROTATION_SPEED: f32 = PI / 40.0;
@@ -56,9 +55,8 @@ pub fn process_events(
         let grid_y = next_pos.y as usize / block_size;
 
         if grid_y < maze.len() && grid_x < maze[grid_y].len() {
-            // --- CAMBIO --- Comprobar si el jugador ha llegado a la meta
-            if goal_unlocked && maze[grid_y][grid_x] == 'g' {
-                return true; // ¡Victoria!
+            if goal_unlocked && maze[grid_y][grid_x] == 'g' { //Comprobar si el jugador ha llegado a la meta
+                return true;
             }
 
             if maze[grid_y][grid_x] == ' ' {
@@ -67,5 +65,5 @@ pub fn process_events(
         }
     }
     
-    false // No se ha ganado en este fotograma
+    false // No se ha ganado
 }

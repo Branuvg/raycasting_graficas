@@ -8,7 +8,6 @@ mod player;
 mod caster;
 mod textures;
 mod enemy;
-// --- NUEVO --- Módulo para coleccionables
 mod collectable;
 
 use raylib::prelude::*;
@@ -19,20 +18,17 @@ use caster::{cast_ray, Intersect};
 use std::f32::consts::PI;
 use textures::TextureManager;
 use enemy::{Enemy, TurnPreference};
-// --- NUEVO --- Importar la estructura Collectable
 use collectable::Collectable;
 
-// --- CAMBIO --- Añadido el estado de victoria
-enum GameState {
+enum GameState { //Estados del juego
     Welcome,
     Playing,
-    GameOver,
-    GameWon,
+    GameOver, //Sin agarrar los coleccionables o que te agarre un enemigo
+    GameWon, //Despues de agarrar los coleccionables
 }
 
 const TRANSPARENT_COLOR: Color = Color::new(0, 0, 0, 0);
 
-// --- CAMBIO --- Generalizada la función para dibujar cualquier sprite
 fn draw_generic_sprite(
     framebuffer: &mut Framebuffer,
     player: &Player,
@@ -50,7 +46,7 @@ fn draw_generic_sprite(
 
     let sprite_d = player.pos.distance_to(sprite_pos);
 
-    if sprite_d < 20.0 || sprite_d > 500.0 { return; } // Aumentado el rango de visión para coleccionables
+    if sprite_d < 20.0 || sprite_d > 400.0 { return; } //Rango de visión para coleccionables
 
     let screen_height = framebuffer.height as f32;
     let screen_width = framebuffer.width as f32;
@@ -94,7 +90,7 @@ fn draw_generic_sprite(
     }
 }
 
-fn render_enemies(
+fn render_enemies( //Renderiza los enemigos
     framebuffer: &mut Framebuffer,
     player: &Player,
     enemies: &[Enemy],
@@ -106,8 +102,7 @@ fn render_enemies(
     }
 }
 
-// --- NUEVO --- Función para renderizar los coleccionables
-fn render_collectables(
+fn render_collectables( //Renderiza los coleccionables
     framebuffer: &mut Framebuffer,
     player: &Player,
     collectables: &[Collectable],
@@ -119,7 +114,7 @@ fn render_collectables(
     }
 }
 
-fn update_enemies(
+fn update_enemies( //Actualiza los enemigos
     enemies: &mut Vec<Enemy>,
     delta_time: f32,
     maze: &Maze,
@@ -130,7 +125,6 @@ fn update_enemies(
     }
 }
 
-// ... (draw_cell y render_maze sin cambios)
 fn draw_cell(
     framebuffer: &mut Framebuffer,
     xo: usize,
@@ -147,7 +141,7 @@ fn draw_cell(
     }
 }
 
-pub fn render_maze(
+pub fn render_maze( //Renderiza el laberinto
     framebuffer: &mut Framebuffer,
     maze: &Maze,
     block_size: usize,
@@ -173,7 +167,7 @@ pub fn render_maze(
 }
 
 
-pub fn render_3d(
+pub fn render_3d( //Renderiza el laberinto en 3D
     framebuffer: &mut Framebuffer,
     maze: &Maze,
     block_size: usize,
@@ -195,14 +189,14 @@ pub fn render_3d(
         let d = intersect.distance;
         let c = intersect.impact;
         let corrected_distance = d * angle_diff.cos() as f32;
-        let stake_height = (hh / corrected_distance)*100.0;
+        let stake_height = (hh / corrected_distance)*100.0; //factor de escala rendering
         let half_stake_height = stake_height / 2.0;
         let stake_top = (hh - half_stake_height) as usize;
         let stake_bottom = (hh + half_stake_height) as usize;
 
         for y in stake_top..stake_bottom {
             let tx = intersect.tx;
-            let ty = ((y as f32 - stake_top as f32) / (stake_bottom as f32 - stake_top as f32))*128.0;
+            let ty = ((y as f32 - stake_top as f32) / (stake_bottom as f32 - stake_top as f32))*128.0; //el 128 tiene que ver con el tamaño de la textura (el ancho), cambiar tanto en main como en caster
             let color = texture_cache.get_pixel_color(c, tx as u32, ty as u32);
             let dist_from_center = ((i as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
             let flashlight_brightness = if dist_from_center < flashlight_radius {
@@ -272,7 +266,7 @@ fn render_minimap(
 
 fn render_welcome_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) {
     d.clear_background(Color::BLACK);
-    let title = "BIENVENIDO AL RAYCASTER";
+    let title = "SNAKE'S PREPARATION (Raycaster game)";
     let title_size = 50;
     let title_x = window_width / 2 - d.measure_text(title, title_size) / 2;
     d.draw_text(title, title_x, 80, title_size, Color::WHITE);
@@ -296,7 +290,7 @@ fn render_welcome_screen(d: &mut RaylibDrawHandle, window_width: i32, window_hei
     d.draw_text(hard, hard_x, window_height - 130, 25, Color::RED);
 }
 
-fn render_game_over_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) {
+fn render_game_over_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) { //Pantalla de Game Over
     d.clear_background(Color::BLACK);
     let msg = "GAME OVER";
     let msg_size = 100;
@@ -308,8 +302,7 @@ fn render_game_over_screen(d: &mut RaylibDrawHandle, window_width: i32, window_h
     d.draw_text(restart_msg, restart_x, window_height / 2 + 50, restart_size, Color::WHITE);
 }
 
-// --- NUEVO --- Pantalla de victoria
-fn render_win_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) {
+fn render_win_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) { //Pantalla de victoria
     d.clear_background(Color::BLACK);
     let msg = "¡Lo lograste!";
     let msg_size = 100;
@@ -331,9 +324,8 @@ fn main() {
         .log_level(TraceLogLevel::LOG_WARNING)
         .build();
     let texture_cache = TextureManager::new(&mut window, &raylib_thread);
-    let flashlight_radius = 500.0;
+    let flashlight_radius = 800.0; //Radio de la linterna
     
-    // --- CORRECCIÓN --- Crear el framebuffer una sola vez, fuera del bucle.
     let mut framebuffer = Framebuffer::new(window_width, window_height, Color::BLACK);
     
     let mut game_state = GameState::Welcome;
@@ -347,7 +339,6 @@ fn main() {
     while !window.window_should_close() {
         match game_state {
             GameState::Welcome => {
-                window.enable_cursor();
                 let mut selected_maze_file = "";
                 let mut player_start_pos = Vector2::zero();
                 
@@ -494,4 +485,3 @@ fn main() {
         }
     }
 }
-

@@ -14,12 +14,10 @@ pub struct Enemy {
     animation_timer: f32,
     velocity: Vector2,
     turn_preference: TurnPreference,
-    // --- CAMBIO --- La velocidad ahora es una propiedad del enemigo
-    speed: f32,
+    speed: f32, //velocidad del enemigo
 }
 
 impl Enemy {
-    // --- CAMBIO --- El constructor ahora acepta un valor de velocidad
     pub fn new(x: f32, y: f32, turn_preference: TurnPreference, speed: f32) -> Self {
         Enemy {
             pos: Vector2::new(x, y),
@@ -27,7 +25,7 @@ impl Enemy {
             animation_timer: 0.0,
             velocity: Vector2::new(1.0, 0.0),
             turn_preference,
-            speed, // Se asigna la velocidad
+            speed,
         }
     }
 
@@ -38,7 +36,6 @@ impl Enemy {
             self.texture_key = if self.texture_key == 'e' { 'f' } else { 'e' };
         }
 
-        // --- CAMBIO --- Se elimina la constante y se usa la propiedad de velocidad
         let check_pos = self.pos + self.velocity * (block_size as f32 / 4.0);
         let grid_x = check_pos.x as usize / block_size;
         let grid_y = check_pos.y as usize / block_size;
@@ -73,7 +70,6 @@ impl Enemy {
             }
         }
         
-        // --- CAMBIO --- Se usa la velocidad de la instancia para el movimiento
         self.pos += self.velocity * self.speed * delta_time;
     }
 }
