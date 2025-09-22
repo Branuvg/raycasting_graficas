@@ -440,8 +440,9 @@ fn main() {
 
                     update_enemies(e, delta_time, m, block_size);
                     const COLLISION_DISTANCE: f32 = 25.0;
-                    for enemy in e.iter() {
-                        if p.pos.distance_to(enemy.pos) < COLLISION_DISTANCE { game_state = GameState::GameOver; }
+                    if e.iter().any(|enemy| p.pos.distance_to(enemy.pos) < COLLISION_DISTANCE) {
+                        let _ = audio_player.play_sfx_once("assets/gotcha.mp3");
+                        game_state = GameState::GameOver;
                     }
 
                     let mut mode = "3D";
