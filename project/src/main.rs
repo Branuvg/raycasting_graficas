@@ -398,7 +398,6 @@ fn main() {
                 if let (Some(p), Some(m), Some(e), Some(c)) = (&mut player, &maze, &mut enemies, &mut collectables) {
                     let delta_time = window.get_frame_time();
                     
-                    // --- CORRECCIÓN --- Usar el framebuffer existente en lugar de crear uno nuevo.
                     framebuffer.clear();
                     
                     let screen_center_x = (window_width / 2) as f32;

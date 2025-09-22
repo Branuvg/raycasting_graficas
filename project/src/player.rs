@@ -19,18 +19,13 @@ pub fn process_events( //Comprobar si el jugador ha llegado a la meta
 ) -> bool {
     const MOVE_SPEED: f32 = 8.0;
     const ROTATION_SPEED: f32 = PI / 40.0;
-    const MOUSE_SENSITIVITY: f32 = 0.003;
+    const MOUSE_SENSITIVITY: f32 = 0.01;
 
-    if window.is_key_down(KeyboardKey::KEY_LEFT) {
+    //Rotación
+    if window.is_key_down(KeyboardKey::KEY_LEFT) || window.is_key_down(KeyboardKey::KEY_A) {
         player.a -= ROTATION_SPEED;
     }
-    if window.is_key_down(KeyboardKey::KEY_RIGHT) {
-        player.a += ROTATION_SPEED;
-    }
-    if window.is_key_down(KeyboardKey::KEY_A) {
-        player.a -= ROTATION_SPEED;
-    }
-    if window.is_key_down(KeyboardKey::KEY_D) {
+    if window.is_key_down(KeyboardKey::KEY_RIGHT) || window.is_key_down(KeyboardKey::KEY_D) {
         player.a += ROTATION_SPEED;
     }
 
@@ -39,12 +34,13 @@ pub fn process_events( //Comprobar si el jugador ha llegado a la meta
     let mut next_pos = player.pos;
     let mut moved = false;
 
-    if window.is_key_down(KeyboardKey::KEY_UP) || window.is_key_down(KeyboardKey::KEY_W) {
+    //Movimiento
+    if window.is_key_down(KeyboardKey::KEY_UP) || window.is_key_down(KeyboardKey::KEY_W) || window.is_mouse_button_down(MouseButton::MOUSE_BUTTON_LEFT) {
         next_pos.x += MOVE_SPEED * player.a.cos();
         next_pos.y += MOVE_SPEED * player.a.sin();
         moved = true;
     }
-    if window.is_key_down(KeyboardKey::KEY_DOWN) || window.is_key_down(KeyboardKey::KEY_S) {
+    if window.is_key_down(KeyboardKey::KEY_DOWN) || window.is_key_down(KeyboardKey::KEY_S) || window.is_mouse_button_down(MouseButton::MOUSE_BUTTON_RIGHT) {
         next_pos.x -= MOVE_SPEED * player.a.cos();
         next_pos.y -= MOVE_SPEED * player.a.sin();
         moved = true;
