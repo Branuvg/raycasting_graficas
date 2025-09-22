@@ -9,7 +9,9 @@ mod caster;
 mod textures;
 mod enemy;
 mod collectable;
+mod audio;  // <-- Añadimos el módulo de audio
 
+use crate::collectable::Collectable;
 use raylib::prelude::*;
 use player::{Player, process_events};
 use framebuffer::Framebuffer;
@@ -18,7 +20,7 @@ use caster::{cast_ray, Intersect};
 use std::f32::consts::PI;
 use textures::TextureManager;
 use enemy::{Enemy, TurnPreference};
-use collectable::Collectable;
+use audio::AudioPlayer;  // <-- Importamos el reproductor de audio
 
 enum GameState { //Estados del juego
     Welcome,
@@ -336,6 +338,12 @@ fn main() {
     let mut score = 0;
     let mut max_score = 0;
     
+    let audio_player = AudioPlayer::default();
+    if let Err(e) = audio_player.play_background_music("assets/background.mp3") {
+        eprintln!("Error al cargar la música de fondo: {}", e);
+    }
+    audio_player.set_volume(0.5);
+
     while !window.window_should_close() {
         match game_state {
             GameState::Welcome => {
