@@ -21,6 +21,7 @@ use std::f32::consts::PI;
 use textures::TextureManager;
 use enemy::{Enemy, TurnPreference};
 use audio::AudioPlayer;  // <-- Importamos el reproductor de audio
+use std::time::Duration; // <-- Para especificar la duración de "ducking"
 
 enum GameState { //Estados del juego
     Welcome,
@@ -441,7 +442,8 @@ fn main() {
                     update_enemies(e, delta_time, m, block_size);
                     const COLLISION_DISTANCE: f32 = 25.0;
                     if e.iter().any(|enemy| p.pos.distance_to(enemy.pos) < COLLISION_DISTANCE) {
-                        let _ = audio_player.play_sfx_once("assets/gotcha.mp3");
+                        // Pausa la música, reproduce el SFX y reanuda la música al terminar
+                        let _ = audio_player.play_sfx_duck_music("assets/gotcha.mp3", Duration::from_millis(2000)); //2000ms = 2s para que se escuche el sound effect
                         game_state = GameState::GameOver;
                     }
 
@@ -477,13 +479,11 @@ fn main() {
                 }
             }
             GameState::GameOver => {
-                window.enable_cursor();
                 if window.is_key_pressed(KeyboardKey::KEY_ENTER) { game_state = GameState::Welcome; }
                 let mut d = window.begin_drawing(&raylib_thread);
                 render_game_over_screen(&mut d, window_width, window_height);
             }
             GameState::GameWon => {
-                window.enable_cursor();
                 if window.is_key_pressed(KeyboardKey::KEY_ENTER) {
                     break;
                 }

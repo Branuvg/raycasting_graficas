@@ -4,6 +4,8 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use rodio::{Decoder, OutputStream, Sink, Source};
 use std::error::Error;
+use std::time::Duration;
+use std::thread;
 
 pub struct AudioPlayer {
     _stream: OutputStream,
@@ -91,6 +93,44 @@ impl AudioPlayer {
             sink.append(source);
             sink.play();
         }
+
+        Ok(())
+    }
+
+    // Reproduce un SFX y "silencia" (pausa) la música de fondo por la duración del SFX
+    // Si no puede obtener la duración, usa un fallback dado por parámetro.
+    pub fn play_sfx_duck_music<P: AsRef<Path>>(
+        &self,
+        file_path: P,
+        fallback_duration: Duration,
+    ) -> Result<(), Box<dyn Error>> {
+        // Detener SFX anterior para evitar solapamientos
+        if let Ok(sink) = self.sfx_sink.lock() {
+            sink.stop();
+        }
+
+        // Cargar el archivo de SFX y obtener duración
+        let file = BufReader::new(File::open(&file_path)?);
+        let decoder = Decoder::new(file)?; // No repetir
+        let sfx_duration = decoder.total_duration().unwrap_or(fallback_duration);
+
+        // Pausar la música
+        self.pause_music();
+
+        // Reproducir el SFX
+        if let Ok(sink) = self.sfx_sink.lock() {
+            sink.append(decoder);
+            sink.play();
+        }
+
+        // Programar reanudación de la música después de la duración del SFX
+        let music_sink = Arc::clone(&self.music_sink);
+        thread::spawn(move || {
+            thread::sleep(sfx_duration);
+            if let Ok(sink) = music_sink.lock() {
+                sink.play();
+            }
+        });
 
         Ok(())
     }
