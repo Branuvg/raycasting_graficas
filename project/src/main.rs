@@ -277,7 +277,16 @@ fn render_welcome_screen(d: &mut RaylibDrawHandle, window_width: i32, window_hei
         "Controles:",
         "- Moverse: W/S o Arriba/Abajo",
         "- Girar Camara: A/D, Izquierda/Derecha: Girar o mouse",
-        "- Volver a este menú: Esc",
+        "- Volver al menú: Tab",
+        "- Salir del juego: Esc",
+        "",
+        "Solid Snake se infiltra a una base terrorista en una misión osp (On Sight Procurement)",
+        "Esta base se encuentra oscura, por lo que solo podrá ver lo que ilumine la linterna y un mapa de la base",
+        "Tendrá que evitar a los enemigos y recoger los objetos le ayudaran a competar la misión",
+        "Estos objestos se pueden presentar como una caja o un arma",
+        "Luego de encontrar la cantidad de objetos necesarios para completar la misión, podrá escapar de la base",
+        "Encuentra la salida al laberinto (Pared que luce como una bandera de final de carrera)",
+        "Si te atrapan, Game Over, Suerte Solid Snake!",
     ];
     for (i, &line) in controls.iter().enumerate() {
         d.draw_text(line, 100, 200 + i as i32 * 30, 20, Color::LIGHTGRAY);
@@ -327,7 +336,7 @@ fn main() {
         .log_level(TraceLogLevel::LOG_WARNING)
         .build();
     let texture_cache = TextureManager::new(&mut window, &raylib_thread);
-    let flashlight_radius = 800.0; //Radio de la linterna
+    let flashlight_radius = 600.0; //Radio de la linterna
     
     let mut framebuffer = Framebuffer::new(window_width, window_height, Color::BLACK);
     
@@ -475,7 +484,7 @@ fn main() {
                         let score_x = window_width / 2 - d.measure_text(&score_text, score_size) / 2;
                         d.draw_text(&score_text, score_x, 10, score_size, Color::GOLD);
                     }
-                    if window.is_key_pressed(KeyboardKey::KEY_ESCAPE) { game_state = GameState::Welcome; }
+                    if window.is_key_pressed(KeyboardKey::KEY_TAB) { game_state = GameState::Welcome; }
                 }
             }
             GameState::GameOver => {
