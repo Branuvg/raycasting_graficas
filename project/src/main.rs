@@ -276,14 +276,14 @@ fn render_welcome_screen(d: &mut RaylibDrawHandle, window_width: i32, window_hei
     let controls = [
         "Controles:",
         "- Moverse: W/S o Arriba/Abajo",
-        "- Girar Camara: A/D, Izquierda/Derecha: Girar o mouse",
+        "- Girar Camara: A/D, Izquierda/Derecha o mouse",
         "- Volver al menú: Tab",
         "- Salir del juego: Esc",
         "",
         "Solid Snake se infiltra a una base terrorista en una misión osp (On Sight Procurement)",
         "Esta base se encuentra oscura, por lo que solo podrá ver lo que ilumine la linterna y un mapa de la base",
         "Tendrá que evitar a los enemigos y recoger los objetos le ayudaran a competar la misión",
-        "Estos objestos se pueden presentar como una caja o un arma",
+        "Estos objetos se pueden presentar como una caja o un arma",
         "Luego de encontrar la cantidad de objetos necesarios para completar la misión, podrá escapar de la base",
         "Encuentra la salida al laberinto (Pared que luce como una bandera de final de carrera)",
         "Si te atrapan, Game Over, Suerte Solid Snake!",
@@ -357,6 +357,11 @@ fn main() {
     while !window.window_should_close() {
         match game_state {
             GameState::Welcome => {
+                // Asegurar que el cursor esté habilitado en el menú
+                if window.is_cursor_hidden() {
+                    window.enable_cursor();
+                }
+                
                 let mut selected_maze_file = "";
                 let mut player_start_pos = Vector2::zero();
                 
@@ -412,7 +417,6 @@ fn main() {
                 render_welcome_screen(&mut d, window_width, window_height);
             }
             GameState::Playing => {
-                window.disable_cursor();
                 if let (Some(p), Some(m), Some(e), Some(c)) = (&mut player, &maze, &mut enemies, &mut collectables) {
                     let delta_time = window.get_frame_time();
                     
@@ -443,8 +447,9 @@ fn main() {
                     });
 
                     let goal_unlocked = score >= max_score;
-                    let mouse_delta_x = window.get_mouse_delta().x;
-                    let goal_reached = process_events(&window, p, m, block_size, mouse_delta_x, goal_unlocked);
+                    
+                    // CAMBIO AQUÍ: Eliminamos mouse_delta_x y pasamos &mut window
+                    let goal_reached = process_events(&mut window, p, m, block_size, goal_unlocked);
 
                     if goal_reached { game_state = GameState::GameWon; }
 
@@ -484,7 +489,12 @@ fn main() {
                         let score_x = window_width / 2 - d.measure_text(&score_text, score_size) / 2;
                         d.draw_text(&score_text, score_x, 10, score_size, Color::GOLD);
                     }
-                    if window.is_key_pressed(KeyboardKey::KEY_TAB) { game_state = GameState::Welcome; }
+                    
+                    // Permitir volver al menú con TAB - esto también habilita el cursor
+                    if window.is_key_pressed(KeyboardKey::KEY_TAB) { 
+                        window.enable_cursor(); // Rehabilitar cursor al volver al menú
+                        game_state = GameState::Welcome; 
+                    }
                 }
             }
             GameState::GameOver => {
