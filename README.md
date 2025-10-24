@@ -48,6 +48,7 @@ cd project
 
 # Construir y ejecutar el juego
 cargo run
+```
 
 ## 🖼️ Media
 
@@ -56,7 +57,6 @@ cargo run
 
 ### Video de Gameplay
 [![Ver en YouTube](https://img.youtube.com/vi/Civ0JbmYTKw/maxresdefault.jpg)](https://youtu.be/Civ0JbmYTKw)
-```
 
 ## 🎮 Controles
 
