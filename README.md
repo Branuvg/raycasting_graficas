@@ -1,10 +1,13 @@
 # Snake's Preparation - Raycaster Game 
 
-Un juego de acción en primera persona con mecánicas de sigilo y recolección, desarrollado en Rust utilizando la biblioteca Raylib.
+Un juego de acción en primera persona con mecánicas de sigilo y recolección, desarrollado en Rust utilizando la biblioteca Raylib. (Video del gameplay hasta abajo del readme)
 
 ## 🎮 Descripción
 
 "Snake's Preparation" es un juego de infiltración en primera persona donde encarnas a Solid Snake en una misión de infiltración en una base enemiga. El juego combina mecánicas de sigilo, recolección de objetos y supervivencia en un entorno oscuro donde solo puedes ver lo que alcanza la luz de tu linterna.
+
+### Captura de Pantalla del Juego
+![Gameplay Screenshot](photo_gameplay.png)
 
 ## ✨ Características
 
@@ -49,14 +52,6 @@ cd project
 # Construir y ejecutar el juego
 cargo run
 ```
-
-## 🖼️ Media
-
-### Captura de Pantalla del Juego
-![Gameplay Screenshot](photo_gameplay.png)
-
-### Video de Gameplay
-[![Ver en YouTube](https://img.youtube.com/vi/Civ0JbmYTKw/maxresdefault.jpg)](https://youtu.be/Civ0JbmYTKw)
 
 ## 🎮 Controles
 
@@ -120,3 +115,6 @@ raycasting_graficas/
 ---
 
 🎮 **¡Diviértete jugando a Snake's Preparation!** 🎮
+
+### Video de Gameplay
+[![Ver en YouTube](https://img.youtube.com/vi/Civ0JbmYTKw/maxresdefault.jpg)](https://youtu.be/Civ0JbmYTKw)
