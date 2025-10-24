@@ -48,6 +48,14 @@ cd project
 
 # Construir y ejecutar el juego
 cargo run
+
+## 🖼️ Media
+
+### Captura de Pantalla del Juego
+![Gameplay Screenshot](photo_gameplay.png)
+
+### Video de Gameplay
+[![Ver en YouTube](https://img.youtube.com/vi/Civ0JbmYTKw/maxresdefault.jpg)](https://youtu.be/Civ0JbmYTKw)
 ```
 
 ## 🎮 Controles
