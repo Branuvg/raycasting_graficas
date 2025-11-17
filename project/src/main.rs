@@ -9,7 +9,7 @@ mod caster;
 mod textures;
 mod enemy;
 mod collectable;
-mod audio;  // <-- Añadimos el módulo de audio
+mod audio; 
 
 use crate::collectable::Collectable;
 use raylib::prelude::*;
@@ -20,14 +20,14 @@ use caster::{cast_ray, Intersect};
 use std::f32::consts::PI;
 use textures::TextureManager;
 use enemy::{Enemy, TurnPreference};
-use audio::AudioPlayer;  // <-- Importamos el reproductor de audio
-use std::time::Duration; // <-- Para especificar la duración de "ducking"
+use audio::AudioPlayer;
+use std::time::Duration;
 
 enum GameState { //Estados del juego
     Welcome,
     Playing,
-    GameOver, //Sin agarrar los coleccionables o que te agarre un enemigo
-    GameWon, //Despues de agarrar los coleccionables
+    GameOver, 
+    GameWon,
 }
 
 const TRANSPARENT_COLOR: Color = Color::new(0, 0, 0, 0);

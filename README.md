@@ -1,31 +1,11 @@
-# Snake's Preparation - Raycaster Game 
+# Proyecto 1: Raycasting
 
 Un juego de acción en primera persona con mecánicas de sigilo y recolección, desarrollado en Rust utilizando la biblioteca Raylib. (Video del gameplay hasta abajo del readme)
-
-## 🎮 Descripción
-
-"Snake's Preparation" es un juego de infiltración en primera persona donde encarnas a Solid Snake en una misión de infiltración en una base enemiga. El juego combina mecánicas de sigilo, recolección de objetos y supervivencia en un entorno oscuro donde solo puedes ver lo que alcanza la luz de tu linterna.
-
-### Captura de Pantalla del Juego
-![Gameplay Screenshot](photo_gameplay.png)
-
-## ✨ Características
-
-- Gráficos 3D con renderizado por raycasting
-- Sistema de iluminación dinámico con linterna
-- Enemigos con IA que patrullan el mapa
-- Múltiples niveles de dificultad
-- Sistema de recolección de objetos
-- Efectos de sonido y música ambiental
-- Interfaz de usuario intuitiva
-- Mapa en miniatura
 
 ## 🛠️ Requisitos del Sistema
 
 - **Sistema Operativo:** Windows 10/11, Linux, o macOS
-- **RAM:** 4GB mínimo
 - **GPU:** Cualquier tarjeta gráfica moderna con soporte OpenGL 3.3+
-- **Disco Duro:** 100MB de espacio libre
 - **Dependencias:**
   - Rust (última versión estable)
   - Cargo (gestor de paquetes de Rust)
@@ -50,7 +30,7 @@ cd raycasting_graficas/project
 cd project
 
 # Construir y ejecutar el juego
-cargo run
+cargo run --release
 ```
 
 ## 🎮 Controles
@@ -71,14 +51,7 @@ cargo run
 - `TAB` - Volver al menú principal
 - `ESC` - Salir del juego
 
-## 🎯 Objetivo del Juego
-
-1. **Recolecta objetos** esparcidos por el mapa para completar tu misión
-2. **Evita a los guardias** que patrullan el área
-3. Una vez recolectados todos los objetos, **encuentra la salida** (marcada con una bandera)
-
 ## 📂 Estructura del Proyecto
-
 ```
 raycasting_graficas/
 ├── project/
@@ -114,7 +87,7 @@ raycasting_graficas/
 
 ---
 
-🎮 **¡Diviértete jugando a Snake's Preparation!** 🎮
+🎮 **¡Diviértete jugando** 🎮
 
 ### Video de Gameplay
 [![Ver en YouTube](https://img.youtube.com/vi/Civ0JbmYTKw/maxresdefault.jpg)](https://youtu.be/Civ0JbmYTKw)
