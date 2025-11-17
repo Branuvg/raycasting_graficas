@@ -269,24 +269,23 @@ fn render_minimap(
 
 fn render_welcome_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) {
     d.clear_background(Color::BLACK);
-    let title = "SNAKE'S PREPARATION (Raycaster game)";
+    let title = "Raycaster - The Mall";
     let title_size = 50;
     let title_x = window_width / 2 - d.measure_text(title, title_size) / 2;
     d.draw_text(title, title_x, 80, title_size, Color::WHITE);
     let controls = [
+        "Eres una niña en un centro comercial",
+        "Encuentra todo el dinero en el nivel",
+        "Cuendo tengas todo el dinero, busca la bolsa para comprarla",
+        "Ten cuidado en el nivel 1 que hay deuda en el centro comercial, si la topas se acaba el juego",
+        "Ten cuidado en el nivel 2 que hay policia en el centro comercial, si te atrapa se acaba el juego",
+        "Disfruta el juego",
+        "",
         "Controles:",
-        "- Moverse: W/S o Arriba/Abajo",
+        "- Moverse: W/S, Arriba/Abajo o click Izquierdo/Derecho",
         "- Girar Camara: A/D, Izquierda/Derecha o mouse",
         "- Volver al menú: Tab",
         "- Salir del juego: Esc",
-        "",
-        "Solid Snake se infiltra a una base terrorista en una misión osp (On Sight Procurement)",
-        "Esta base se encuentra oscura, por lo que solo podrá ver lo que ilumine la linterna y un mapa de la base",
-        "Tendrá que evitar a los enemigos y recoger los objetos le ayudaran a competar la misión",
-        "Estos objetos se pueden presentar como una caja o un arma",
-        "Luego de encontrar la cantidad de objetos necesarios para completar la misión, podrá escapar de la base",
-        "Encuentra la salida al laberinto (Pared que luce como una bandera de final de carrera)",
-        "Si te atrapan, Game Over, Suerte Solid Snake!",
     ];
     for (i, &line) in controls.iter().enumerate() {
         d.draw_text(line, 100, 200 + i as i32 * 30, 20, Color::LIGHTGRAY);
@@ -294,10 +293,10 @@ fn render_welcome_screen(d: &mut RaylibDrawHandle, window_width: i32, window_hei
     let levels = "Selecciona un nivel:";
     let levels_x = window_width / 2 - d.measure_text(levels, 30) / 2;
     d.draw_text(levels, levels_x, window_height - 250, 30, Color::GOLD);
-    let easy = "[1] Fácil";
+    let easy = "[1] Deuda";
     let easy_x = window_width / 2 - d.measure_text(easy, 25) / 2;
     d.draw_text(easy, easy_x, window_height - 180, 25, Color::GREEN);
-    let hard = "[2] Difícil";
+    let hard = "[2] Policia";
     let hard_x = window_width / 2 - d.measure_text(hard, 25) / 2;
     d.draw_text(hard, hard_x, window_height - 130, 25, Color::RED);
 }
@@ -369,41 +368,40 @@ fn main() {
                     selected_maze_file = "maze.txt";
                     player_start_pos = Vector2::new(1.5 * block_size as f32, 6.5 * block_size as f32);
                     max_score = 6;
-                    const EASY_SPEED: f32 = 200.0;
-                    enemies = Some(vec![
-                        Enemy::new(1.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Right, EASY_SPEED),
-                        Enemy::new(7.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Left, EASY_SPEED),
-                        Enemy::new(1.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, EASY_SPEED),
-                        Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, EASY_SPEED),
+                    const ZERO_SPEED: f32 = 0.0;
+                    enemies = Some(vec![ //FIX POSITIONING
+                        Enemy::new(1.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
+                        Enemy::new(7.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
+                        Enemy::new(3.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
+                        Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
                     ]);
                     collectables = Some(vec![
-                        Collectable::new(1.5 * block_size as f32, 1.5 * block_size as f32, 'h'),
-                        Collectable::new(5.5 * block_size as f32, 3.5 * block_size as f32, 'h'),
-                        Collectable::new(7.5 * block_size as f32, 3.5 * block_size as f32, 'h'),
-                        Collectable::new(8.0 * block_size as f32, 7.5 * block_size as f32, 'c'),
-                        Collectable::new(3.5 * block_size as f32, 1.5 * block_size as f32, 'c'),
-                        Collectable::new(1.5 * block_size as f32, 5.0 * block_size as f32, 'c'),
+                        Collectable::new(1.5 * block_size as f32, 1.5 * block_size as f32, 'm'),
+                        Collectable::new(5.5 * block_size as f32, 3.5 * block_size as f32, 'm'),
+                        Collectable::new(7.5 * block_size as f32, 3.5 * block_size as f32, 'm'),
+                        Collectable::new(8.0 * block_size as f32, 7.5 * block_size as f32, 'm'), //g
+                        Collectable::new(2.5 * block_size as f32, 1.5 * block_size as f32, 'm'),
+                        Collectable::new(1.5 * block_size as f32, 5.0 * block_size as f32, 'm'),
                     ]);
                 }
                 if window.is_key_pressed(KeyboardKey::KEY_TWO) {
-                    selected_maze_file = "maze_hard.txt";
-                    player_start_pos = Vector2::new(1.5 * block_size as f32, 18.5 * block_size as f32);
-                    max_score = 18;
-                    const HARD_SPEED: f32 = 400.0;
-                    let enemy_positions = [ (1.5, 1.5), (19.5, 1.5), (1.5, 19.5), (19.5, 19.5), (10.5, 1.5), (1.5, 9.5), (19.5, 9.5), (10.5, 19.5), (5.5, 5.5), (15.5, 5.5), (5.5, 15.5), (15.5, 15.5) ];
-                    let mut enemy_vec = Vec::new();
-                    for (i, &(x, y)) in enemy_positions.iter().enumerate() {
-                        let preference = if i % 2 == 0 { TurnPreference::Right } else { TurnPreference::Left };
-                        enemy_vec.push(Enemy::new(x * block_size as f32, y * block_size as f32, preference, HARD_SPEED));
-                    }
-                    enemies = Some(enemy_vec);
+                    selected_maze_file = "maze.txt";
+                    player_start_pos = Vector2::new(1.5 * block_size as f32, 6.5 * block_size as f32);
+                    max_score = 6;
+                    const SPEED: f32 = 250.0;
+                    enemies = Some(vec![
+                        Enemy::new(1.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Right, SPEED),
+                        Enemy::new(7.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Left, SPEED),
+                        Enemy::new(1.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, SPEED),
+                        Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, SPEED),
+                    ]);
                     collectables = Some(vec![
-                        Collectable::new(1.5 * block_size as f32, 1.5 * block_size as f32, 'h'),   Collectable::new(10.5 * block_size as f32, 1.5 * block_size as f32, 'c'),  Collectable::new(19.5 * block_size as f32, 1.5 * block_size as f32, 'h'),
-                        Collectable::new(1.5 * block_size as f32, 5.5 * block_size as f32, 'c'),   Collectable::new(10.5 * block_size as f32, 5.5 * block_size as f32, 'h'),  Collectable::new(19.5 * block_size as f32, 5.5 * block_size as f32, 'c'),
-                        Collectable::new(1.5 * block_size as f32, 9.5 * block_size as f32, 'h'),   Collectable::new(10.5 * block_size as f32, 9.5 * block_size as f32, 'c'),  Collectable::new(19.5 * block_size as f32, 9.5 * block_size as f32, 'h'),
-                        Collectable::new(1.5 * block_size as f32, 13.5 * block_size as f32, 'c'),  Collectable::new(10.5 * block_size as f32, 13.5 * block_size as f32, 'h'), Collectable::new(19.5 * block_size as f32, 13.5 * block_size as f32, 'c'),
-                        Collectable::new(5.5 * block_size as f32, 16.5 * block_size as f32, 'h'),  Collectable::new(15.5 * block_size as f32, 16.5 * block_size as f32, 'c'), Collectable::new(3.5 * block_size as f32, 19.5 * block_size as f32, 'h'),
-                        Collectable::new(8.5 * block_size as f32, 19.5 * block_size as f32, 'c'),  Collectable::new(13.5 * block_size as f32, 19.5 * block_size as f32, 'h'), Collectable::new(18.5 * block_size as f32, 10.5 * block_size as f32, 'c'),
+                        Collectable::new(1.5 * block_size as f32, 1.5 * block_size as f32, 'm'),
+                        Collectable::new(5.5 * block_size as f32, 3.5 * block_size as f32, 'm'),
+                        Collectable::new(7.5 * block_size as f32, 3.5 * block_size as f32, 'm'),
+                        Collectable::new(8.0 * block_size as f32, 7.5 * block_size as f32, 'm'),
+                        Collectable::new(3.5 * block_size as f32, 1.5 * block_size as f32, 'm'),
+                        Collectable::new(1.5 * block_size as f32, 5.0 * block_size as f32, 'm'),
                     ]);
                 }
 
@@ -457,7 +455,7 @@ fn main() {
                     const COLLISION_DISTANCE: f32 = 25.0;
                     if e.iter().any(|enemy| p.pos.distance_to(enemy.pos) < COLLISION_DISTANCE) {
                         // Pausa la música, reproduce el SFX y reanuda la música al terminar
-                        let _ = audio_player.play_sfx_duck_music("assets/gotcha.mp3", Duration::from_millis(2000)); //2000ms = 2s para que se escuche el sound effect
+                        let _ = audio_player.play_sfx_duck_music("assets/sad.mp3", Duration::from_millis(2000)); //2000ms = 2s para que se escuche el sound effect
                         game_state = GameState::GameOver;
                     }
 

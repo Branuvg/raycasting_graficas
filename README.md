@@ -90,4 +90,4 @@ raycasting_graficas/
 🎮 **¡Diviértete jugando** 🎮
 
 ### Video de Gameplay
-[![Ver en YouTube](https://img.youtube.com/vi/Civ0JbmYTKw/maxresdefault.jpg)](https://youtu.be/Civ0JbmYTKw)
+[![Ver en YouTube](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://youtu.be/VIDEO_ID)

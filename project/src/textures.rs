@@ -15,15 +15,14 @@ impl TextureManager {
 
         // Map characters to texture file paths
         let texture_files = vec![
-            ('+', "assets/brick.png"),
-            ('-', "assets/wood.png"),
-            ('|', "assets/brick.png"),
-            ('g', "assets/flag.png"),
-            ('e', "assets/enemy1.png"),
-            ('f', "assets/enemy2.png"),
-            ('c', "assets/box.png"),
-            ('h', "assets/gun.png"),
-            ('#', "assets/fallback.png"), // default/fallback
+            ('+', "assets/zara_wall.png"),
+            ('-', "assets/sephora_wall.png"),
+            ('|', "assets/lego_wall.png"),
+            ('e', "assets/police1.png"),
+            ('f', "assets/police2.png"),
+            ('#', "assets/sophos_wall.png"), //fallback
+            ('m', "assets/money.png"),
+            ('b', "assets/bag.png"),
         ];
 
         for (ch, path) in texture_files {
