@@ -19,7 +19,7 @@ use maze::{Maze,load_maze};
 use caster::{cast_ray, Intersect};
 use std::f32::consts::PI;
 use textures::TextureManager;
-use enemy::{Enemy, TurnPreference, EnemyType}; // Agregamos EnemyType aquí
+use enemy::{Enemy, TurnPreference, EnemyType};
 use audio::AudioPlayer;
 use std::time::Duration;
 
@@ -417,14 +417,23 @@ fn main() {
                     }
 
                     const COLLECT_DISTANCE: f32 = 35.0;
+                    let mut collected_count = 0; // Contador para saber cuántos coleccionables se recolectaron
                     c.retain(|item| {
                         if p.pos.distance_to(item.pos) < COLLECT_DISTANCE {
+                            collected_count += 1;
                             score += 1;
                             false
                         } else {
                             true
                         }
                     });
+
+                    // Reproducir sonido para cada coleccionable recolectado en este frame
+                    if collected_count > 0 {
+                        if let Err(e) = audio_player.play_sfx_once("assets/kaching.mp3") {
+                            eprintln!("Error al reproducir sonido de coleccionable: {}", e);
+                        }
+                    }
 
                     let goal_unlocked = score >= max_score;
                     
