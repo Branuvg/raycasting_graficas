@@ -230,7 +230,7 @@ fn render_minimap(
     }
     let player_map_x = offset_x + (player.pos.x * MINIMAP_SCALE) as i32;
     let player_map_y = offset_y + (player.pos.y * MINIMAP_SCALE) as i32;
-    framebuffer.set_current_color(Color::YELLOW);
+    framebuffer.set_current_color(Color::DARKGREEN);
     for dy in -2..=2 {
         for dx in -2..=2 {
             framebuffer.set_pixel(player_map_x + dx, player_map_y + dy);
@@ -415,7 +415,18 @@ fn main() {
                     framebuffer.clear();
                     
                     let half_height = (window_height / 2) as i32;
-                    let floor_color = Color::new(51, 25, 0, 255);
+                    let floor_color = Color::new(210, 180, 140, 255);  
+                    let ceiling_color = Color::new(225, 220, 215, 255);
+                    
+                    // Dibujar cielo (parte superior de la pantalla)
+                    for y in 0..half_height {
+                        for x in 0..window_width as i32 {
+                            framebuffer.set_current_color(ceiling_color);
+                            framebuffer.set_pixel(x, y);
+                        }
+                    }
+
+                    // Dibujar tierra (parte inferior de la pantalla)
                     for y in half_height..window_height as i32 {
                         for x in 0..window_width as i32 {
                             let final_color = floor_color;
