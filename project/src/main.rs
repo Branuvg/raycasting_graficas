@@ -48,7 +48,8 @@ fn draw_generic_sprite(
 
     let sprite_d = player.pos.distance_to(sprite_pos);
 
-    if sprite_d < 20.0 || sprite_d > 400.0 { return; } //Rango de visión para coleccionables
+    // AJUSTE DE DISTANCIA DE RENDERIZADO: Cambia este valor para controlar la distancia de visión
+    if sprite_d < 10.0 || sprite_d > 250.0 { return; } // Rango de visión para coleccionables
 
     let screen_height = framebuffer.height as f32;
     let screen_width = framebuffer.width as f32;
@@ -247,11 +248,13 @@ fn render_minimap(
 }
 
 fn render_welcome_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) {
-    d.clear_background(Color::BLACK);
+    // Fondo rosado oscuro
+    d.clear_background(Color::new(139, 0, 139, 255)); // Purple (magenta oscuro)
     let title = "Raycaster - The Mall";
     let title_size = 50;
     let title_x = window_width / 2 - d.measure_text(title, title_size) / 2;
-    d.draw_text(title, title_x, 80, title_size, Color::WHITE);
+    // Usar colores más estilizados
+    d.draw_text(title, title_x, 80, title_size, Color::PINK);
     let controls = [
         "Eres una niña en un centro comercial",
         "Encuentra todo el dinero en el nivel",
@@ -274,7 +277,7 @@ fn render_welcome_screen(d: &mut RaylibDrawHandle, window_width: i32, window_hei
     d.draw_text(levels, levels_x, window_height - 250, 30, Color::GOLD);
     let easy = "[1] Deuda";
     let easy_x = window_width / 2 - d.measure_text(easy, 25) / 2;
-    d.draw_text(easy, easy_x, window_height - 180, 25, Color::GREEN);
+    d.draw_text(easy, easy_x, window_height - 180, 25, Color::ORANGE);
     let hard = "[2] Policia";
     let hard_x = window_width / 2 - d.measure_text(hard, 25) / 2;
     d.draw_text(hard, hard_x, window_height - 130, 25, Color::RED);
@@ -289,7 +292,7 @@ fn render_game_over_screen(d: &mut RaylibDrawHandle, window_width: i32, window_h
     let restart_msg = "Presiona ENTER para volver al menú";
     let restart_size = 25;
     let restart_x = window_width / 2 - d.measure_text(restart_msg, restart_size) / 2;
-    d.draw_text(restart_msg, restart_x, window_height / 2 + 50, restart_size, Color::WHITE);
+    d.draw_text(restart_msg, restart_x, window_height / 2 + 50, restart_size, Color::PINK); // Texto rosa
 }
 
 fn render_win_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) { //Pantalla de victoria
@@ -301,7 +304,7 @@ fn render_win_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height:
     let close_msg = "Presiona ENTER para cerrar el juego";
     let close_size = 25;
     let close_x = window_width / 2 - d.measure_text(close_msg, close_size) / 2;
-    d.draw_text(close_msg, close_x, window_height / 2 + 50, close_size, Color::WHITE);
+    d.draw_text(close_msg, close_x, window_height / 2 + 50, close_size, Color::PINK); // Texto rosa
 }
 
 fn main() {
@@ -381,7 +384,8 @@ fn main() {
                         Enemy::new(7.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Left, SPEED, EnemyType::Police),
                         Enemy::new(1.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, SPEED, EnemyType::Police),
                         Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, SPEED, EnemyType::Police),
-                        Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, SPEED, EnemyType::Police),
+                        Enemy::new(1.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, SPEED, EnemyType::Police),
+                        Enemy::new(10.5 * block_size as f32, 6.5 * block_size as f32, TurnPreference::Left, SPEED, EnemyType::Police),
                         ]);
                     collectables = Some(vec![
                         Collectable::new(1.5 * block_size as f32, 1.5 * block_size as f32, 'm'),
@@ -490,23 +494,23 @@ fn main() {
                         d.draw_texture(&texture, 0, 0, Color::WHITE);
                         
                         let fps = d.get_fps();
-                        d.draw_text(&format!("FPS: {}", fps), 10, 10, 20, Color::WHITE);
+                        d.draw_text(&format!("FPS: {}", fps), 10, 10, 20, Color::PINK); // Texto rosa
                         
                         let coords_text = format!("X: {:.1} Y: {:.1}", p.pos.x, p.pos.y);
-                        d.draw_text(&coords_text, 10, 40, 20, Color::WHITE);
+                        d.draw_text(&coords_text, 10, 40, 20, Color::PINK); // Texto rosa
                         
                         // Mostrar mensaje de "Busca la bolsa" cuando se recolecten todos los dineros
                         if money_collected == max_money && bag_created && !bag_collected {
                             let msg = "¡Busca la bolsa!";
                             let msg_size = 30;
                             let msg_x = window_width / 2 - d.measure_text(msg, msg_size) / 2;
-                            d.draw_text(msg, msg_x, 70, msg_size, Color::GOLD);
+                            d.draw_text(msg, msg_x, 70, msg_size, Color::PINK); // Texto rosa
                         }
                         
                         let score_text = format!("{}/{}", money_collected, max_money);
                         let score_size = 30;
                         let score_x = window_width / 2 - d.measure_text(&score_text, score_size) / 2;
-                        d.draw_text(&score_text, score_x, 10, score_size, Color::GOLD);
+                        d.draw_text(&score_text, score_x, 10, score_size, Color::PINK); // Texto rosa
                     }
                     
                     // Permitir volver al menú con TAB - esto también habilita el cursor
