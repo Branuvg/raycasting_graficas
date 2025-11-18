@@ -38,7 +38,6 @@ fn draw_generic_sprite(
     sprite_pos: Vector2,
     sprite_texture: char,
     texture_manager: &TextureManager,
-    flashlight_radius: f32,
 ) {
     let sprite_a = (sprite_pos.y - player.pos.y).atan2(sprite_pos.x - player.pos.x);
     let mut angle_diff = sprite_a - player.a;
@@ -73,17 +72,11 @@ fn draw_generic_sprite(
             let color = texture_manager.get_pixel_color(sprite_texture, tx, ty);
             
             if color != TRANSPARENT_COLOR {
-                let dist_from_center = ((x as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
-                let flashlight_brightness = if dist_from_center < flashlight_radius {
-                    let falloff = 1.0 - (dist_from_center / flashlight_radius);
-                    falloff * falloff
-                } else { 0.0 };
                 let distance_fade = (1.0 - (sprite_d / 1000.0)).max(0.0);
-                let final_brightness = flashlight_brightness * distance_fade;
                 let final_color = Color::new(
-                    (color.r as f32 * final_brightness) as u8,
-                    (color.g as f32 * final_brightness) as u8,
-                    (color.b as f32 * final_brightness) as u8,
+                    (color.r as f32 * distance_fade) as u8,
+                    (color.g as f32 * distance_fade) as u8,
+                    (color.b as f32 * distance_fade) as u8,
                     color.a
                 );
                 framebuffer.set_current_color(final_color);
@@ -98,10 +91,9 @@ fn render_enemies( //Renderiza los enemigos
     player: &Player,
     enemies: &[Enemy],
     texture_cache: &TextureManager,
-    flashlight_radius: f32,
 ) {
     for enemy in enemies {
-        draw_generic_sprite(framebuffer, player, enemy.pos, enemy.texture_key, texture_cache, flashlight_radius);
+        draw_generic_sprite(framebuffer, player, enemy.pos, enemy.texture_key, texture_cache);
     }
 }
 
@@ -110,10 +102,9 @@ fn render_collectables( //Renderiza los coleccionables
     player: &Player,
     collectables: &[Collectable],
     texture_cache: &TextureManager,
-    flashlight_radius: f32,
 ) {
     for item in collectables {
-        draw_generic_sprite(framebuffer, player, item.pos, item.texture_key, texture_cache, flashlight_radius);
+        draw_generic_sprite(framebuffer, player, item.pos, item.texture_key, texture_cache);
     }
 }
 
@@ -176,7 +167,6 @@ pub fn render_3d( //Renderiza el laberinto en 3D
     block_size: usize,
     player: &Player,
     texture_cache: &TextureManager,
-    flashlight_radius: f32,
 ) {
     let num_rays = framebuffer.width;
     let hh = framebuffer.height as f32/ 2.0;
@@ -201,17 +191,11 @@ pub fn render_3d( //Renderiza el laberinto en 3D
             let tx = intersect.tx;
             let ty = ((y as f32 - stake_top as f32) / (stake_bottom as f32 - stake_top as f32))*128.1; //el 128 tiene que ver con el tamaño de la textura (el ancho), cambiar tanto en main como en caster
             let color = texture_cache.get_pixel_color(c, tx as u32, ty as u32);
-            let dist_from_center = ((i as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
-            let flashlight_brightness = if dist_from_center < flashlight_radius {
-                let falloff = 1.0 - (dist_from_center / flashlight_radius);
-                falloff * falloff
-            } else { 0.0 };
             let distance_fade = (1.0 - (corrected_distance / 1000.0)).max(0.0);
-            let final_brightness = flashlight_brightness * distance_fade;
             let final_color = Color::new(
-                (color.r as f32 * final_brightness) as u8,
-                (color.g as f32 * final_brightness) as u8,
-                (color.b as f32 * final_brightness) as u8,
+                (color.r as f32 * distance_fade) as u8,
+                (color.g as f32 * distance_fade) as u8,
+                (color.b as f32 * distance_fade) as u8,
                 color.a
             );
             framebuffer.set_current_color(final_color);
@@ -276,7 +260,7 @@ fn render_welcome_screen(d: &mut RaylibDrawHandle, window_width: i32, window_hei
     let controls = [
         "Eres una niña en un centro comercial",
         "Encuentra todo el dinero en el nivel",
-        "Cuendo tengas todo el dinero, busca la bolsa para comprarla",
+        "Cuando tengas todo el dinero, busca la bolsa para comprarla",
         "Ten cuidado en el nivel 1 que hay deuda en el centro comercial, si la topas se acaba el juego",
         "Ten cuidado en el nivel 2 que hay policia en el centro comercial, si te atrapa se acaba el juego",
         "Disfruta el juego",
@@ -335,7 +319,6 @@ fn main() {
         .log_level(TraceLogLevel::LOG_WARNING)
         .build();
     let texture_cache = TextureManager::new(&mut window, &raylib_thread);
-    let flashlight_radius = 600.0; //Radio de la linterna
     
     let mut framebuffer = Framebuffer::new(window_width, window_height, Color::BLACK);
     
@@ -434,9 +417,7 @@ fn main() {
                     let floor_color = Color::new(51, 25, 0, 255);
                     for y in half_height..window_height as i32 {
                         for x in 0..window_width as i32 {
-                            let dist_from_center = ((x as f32 - screen_center_x).powi(2) + (y as f32 - screen_center_y).powi(2)).sqrt();
-                            let brightness = if dist_from_center < flashlight_radius { let falloff = 1.0 - (dist_from_center / flashlight_radius); falloff } else { 0.0 };
-                            let final_color = Color::new((floor_color.r as f32 * brightness) as u8, (floor_color.g as f32 * brightness) as u8, (floor_color.b as f32 * brightness) as u8, 255);
+                            let final_color = floor_color;
                             framebuffer.set_current_color(final_color);
                             framebuffer.set_pixel(x, y);
                         }
@@ -473,9 +454,9 @@ fn main() {
                     if mode == "2D" {
                         render_maze(&mut framebuffer, m, block_size, p);
                     } else {
-                        render_3d(&mut framebuffer, m, block_size, p, &texture_cache, flashlight_radius);
-                        render_enemies(&mut framebuffer, p, e, &texture_cache, flashlight_radius);
-                        render_collectables(&mut framebuffer, p, c, &texture_cache, flashlight_radius);
+                        render_3d(&mut framebuffer, m, block_size, p, &texture_cache);
+                        render_enemies(&mut framebuffer, p, e, &texture_cache);
+                        render_collectables(&mut framebuffer, p, c, &texture_cache);
                     }
                     if mode != "2D" { render_minimap(&mut framebuffer, m, p, block_size, window_width); }
                     
