@@ -322,8 +322,10 @@ fn main() {
     let mut player: Option<Player> = None;
     let mut enemies: Option<Vec<Enemy>> = None;
     let mut collectables: Option<Vec<Collectable>> = None;
-    let mut score = 0;
-    let mut max_score = 0;
+    let mut bag_created = false; // Nuevo estado para saber si la bolsa ya ha sido creada
+    let mut bag_collected = false; // Nuevo estado para saber si la bolsa ya ha sido recolectada
+    let mut money_collected = 0; // Contador específico para dinero recolectado
+    let mut max_money = 0;
     
     let audio_player = AudioPlayer::default();
     if let Err(e) = audio_player.play_background_music("assets/background.mp3") {
@@ -345,7 +347,7 @@ fn main() {
                 if window.is_key_pressed(KeyboardKey::KEY_ONE) {
                     selected_maze_file = "maze.txt";
                     player_start_pos = Vector2::new(1.5 * block_size as f32, 6.5 * block_size as f32);
-                    max_score = 6;
+                    max_money = 6;
                     const ZERO_SPEED: f32 = 0.0;
                     enemies = Some(vec![
                         Enemy::new(2.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, ZERO_SPEED, EnemyType::Debt),
@@ -372,7 +374,7 @@ fn main() {
                 if window.is_key_pressed(KeyboardKey::KEY_TWO) {
                     selected_maze_file = "maze.txt";
                     player_start_pos = Vector2::new(1.5 * block_size as f32, 6.5 * block_size as f32);
-                    max_score = 6;
+                    max_money = 6;
                     const SPEED: f32 = 250.0;
                     enemies = Some(vec![
                         Enemy::new(1.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Right, SPEED, EnemyType::Police),
@@ -394,7 +396,9 @@ fn main() {
                 if !selected_maze_file.is_empty() {
                     maze = Some(load_maze(selected_maze_file));
                     player = Some(Player { pos: player_start_pos, a: -PI / 2.0, fov: PI / 3.0 });
-                    score = 0;
+                    bag_created = false;
+                    bag_collected = false;
+                    money_collected = 0;
                     game_state = GameState::Playing;
                 }
                 let mut d = window.begin_drawing(&raylib_thread);
@@ -421,7 +425,18 @@ fn main() {
                     c.retain(|item| {
                         if p.pos.distance_to(item.pos) < COLLECT_DISTANCE {
                             collected_count += 1;
-                            score += 1;
+                            
+                            // Distinguir entre dinero y bolsa
+                            if item.texture_key == 'm' {
+                                // Es dinero
+                                money_collected += 1;
+                            } else if item.texture_key == 'b' {
+                                // Es la bolsa - cambiar al estado de victoria
+                                bag_collected = true;
+                                game_state = GameState::GameWon;
+                                return false; // No mantener la bolsa en la lista
+                            }
+                            
                             false
                         } else {
                             true
@@ -435,7 +450,14 @@ fn main() {
                         }
                     }
 
-                    let goal_unlocked = score >= max_score;
+                    // Si se recolectaron todos los dineros y la bolsa no ha sido creada aún
+                    if money_collected == max_money && !bag_created && !bag_collected {
+                        // Agregar la bolsa en la posición (8.0, 7.5)
+                        c.push(Collectable::new(8.0 * block_size as f32, 7.5 * block_size as f32, 'b'));
+                        bag_created = true; // Marcar que la bolsa ya ha sido creada
+                    }
+
+                    let goal_unlocked = money_collected >= max_money;
                     
                     // CAMBIO AQUÍ: Eliminamos mouse_delta_x y pasamos &mut window
                     let goal_reached = process_events(&mut window, p, m, block_size, goal_unlocked);
@@ -473,7 +495,15 @@ fn main() {
                         let coords_text = format!("X: {:.1} Y: {:.1}", p.pos.x, p.pos.y);
                         d.draw_text(&coords_text, 10, 40, 20, Color::WHITE);
                         
-                        let score_text = format!("{}/{}", score, max_score);
+                        // Mostrar mensaje de "Busca la bolsa" cuando se recolecten todos los dineros
+                        if money_collected == max_money && bag_created && !bag_collected {
+                            let msg = "¡Busca la bolsa!";
+                            let msg_size = 30;
+                            let msg_x = window_width / 2 - d.measure_text(msg, msg_size) / 2;
+                            d.draw_text(msg, msg_x, 70, msg_size, Color::GOLD);
+                        }
+                        
+                        let score_text = format!("{}/{}", money_collected, max_money);
                         let score_size = 30;
                         let score_x = window_width / 2 - d.measure_text(&score_text, score_size) / 2;
                         d.draw_text(&score_text, score_x, 10, score_size, Color::GOLD);
