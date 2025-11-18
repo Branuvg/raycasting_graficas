@@ -369,18 +369,25 @@ fn main() {
                     player_start_pos = Vector2::new(1.5 * block_size as f32, 6.5 * block_size as f32);
                     max_score = 6;
                     const ZERO_SPEED: f32 = 0.0;
-                    enemies = Some(vec![ //FIX POSITIONING
-                        Enemy::new(1.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
-                        Enemy::new(7.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
-                        Enemy::new(3.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
+                    enemies = Some(vec![
+                        Enemy::new(2.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
+                        Enemy::new(5.8 * block_size as f32, 7.7 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
+                        Enemy::new(1.6 * block_size as f32, 3.8 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
+                        Enemy::new(3.0 * block_size as f32, 1.7 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
+                        Enemy::new(7.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
+                        Enemy::new(11.5 * block_size as f32, 2.4 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
+                        Enemy::new(10.6 * block_size as f32, 2.4 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
+                        Enemy::new(5.6 * block_size as f32, 3.2 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
+                        Enemy::new(4.5 * block_size as f32, 5.6 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
                         Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
+                        Enemy::new(10.6 * block_size as f32, 6.0 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
                     ]);
                     collectables = Some(vec![
                         Collectable::new(1.5 * block_size as f32, 1.5 * block_size as f32, 'm'),
-                        Collectable::new(5.5 * block_size as f32, 3.5 * block_size as f32, 'm'),
+                        Collectable::new(6.5 * block_size as f32, 5.5 * block_size as f32, 'm'),
                         Collectable::new(7.5 * block_size as f32, 3.5 * block_size as f32, 'm'),
                         Collectable::new(8.0 * block_size as f32, 7.5 * block_size as f32, 'm'), //g
-                        Collectable::new(2.5 * block_size as f32, 1.5 * block_size as f32, 'm'),
+                        Collectable::new(11.5 * block_size as f32, 7.0 * block_size as f32, 'm'),
                         Collectable::new(1.5 * block_size as f32, 5.0 * block_size as f32, 'm'),
                     ]);
                 }
@@ -394,13 +401,14 @@ fn main() {
                         Enemy::new(7.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Left, SPEED),
                         Enemy::new(1.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, SPEED),
                         Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, SPEED),
-                    ]);
+                        Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, SPEED),
+                        ]);
                     collectables = Some(vec![
                         Collectable::new(1.5 * block_size as f32, 1.5 * block_size as f32, 'm'),
-                        Collectable::new(5.5 * block_size as f32, 3.5 * block_size as f32, 'm'),
+                        Collectable::new(6.5 * block_size as f32, 5.5 * block_size as f32, 'm'),
                         Collectable::new(7.5 * block_size as f32, 3.5 * block_size as f32, 'm'),
                         Collectable::new(8.0 * block_size as f32, 7.5 * block_size as f32, 'm'),
-                        Collectable::new(3.5 * block_size as f32, 1.5 * block_size as f32, 'm'),
+                        Collectable::new(11.5 * block_size as f32, 7.0 * block_size as f32, 'm'),
                         Collectable::new(1.5 * block_size as f32, 5.0 * block_size as f32, 'm'),
                     ]);
                 }

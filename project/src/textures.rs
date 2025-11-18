@@ -23,6 +23,7 @@ impl TextureManager {
             ('#', "assets/sophos_wall.png"), //fallback
             ('m', "assets/money.png"),
             ('b', "assets/bag.png"),
+            ('d', "assets/debt.png"),
         ];
 
         for (ch, path) in texture_files {
