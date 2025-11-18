@@ -19,7 +19,7 @@ use maze::{Maze,load_maze};
 use caster::{cast_ray, Intersect};
 use std::f32::consts::PI;
 use textures::TextureManager;
-use enemy::{Enemy, TurnPreference};
+use enemy::{Enemy, TurnPreference, EnemyType}; // Agregamos EnemyType aquí
 use audio::AudioPlayer;
 use std::time::Duration;
 
@@ -52,8 +52,6 @@ fn draw_generic_sprite(
 
     let screen_height = framebuffer.height as f32;
     let screen_width = framebuffer.width as f32;
-    let screen_center_x = screen_width / 2.0;
-    let screen_center_y = screen_height / 2.0;
 
     let sprite_size = (screen_height / sprite_d) * 70.0;
     let screen_x = ((angle_diff / player.fov) + 0.5) * screen_width;
@@ -170,9 +168,6 @@ pub fn render_3d( //Renderiza el laberinto en 3D
 ) {
     let num_rays = framebuffer.width;
     let hh = framebuffer.height as f32/ 2.0;
-    let screen_width = framebuffer.width as f32;
-    let screen_center_x = screen_width / 2.0;
-    let screen_center_y = hh;
 
     for i in 0..num_rays {
         let current_ray = i as f32 / num_rays as f32;
@@ -299,7 +294,7 @@ fn render_game_over_screen(d: &mut RaylibDrawHandle, window_width: i32, window_h
 
 fn render_win_screen(d: &mut RaylibDrawHandle, window_width: i32, window_height: i32) { //Pantalla de victoria
     d.clear_background(Color::BLACK);
-    let msg = "¡Lo lograste!";
+    let msg = "¡Compraste la bolsa!";
     let msg_size = 100;
     let msg_x = window_width / 2 - d.measure_text(msg, msg_size) / 2;
     d.draw_text(msg, msg_x, window_height / 2 - 100, msg_size, Color::GOLD);
@@ -353,17 +348,17 @@ fn main() {
                     max_score = 6;
                     const ZERO_SPEED: f32 = 0.0;
                     enemies = Some(vec![
-                        Enemy::new(2.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
-                        Enemy::new(5.8 * block_size as f32, 7.7 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
-                        Enemy::new(1.6 * block_size as f32, 3.8 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
-                        Enemy::new(3.0 * block_size as f32, 1.7 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
-                        Enemy::new(7.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
-                        Enemy::new(11.5 * block_size as f32, 2.4 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
-                        Enemy::new(10.6 * block_size as f32, 2.4 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
-                        Enemy::new(5.6 * block_size as f32, 3.2 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
-                        Enemy::new(4.5 * block_size as f32, 5.6 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
-                        Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, ZERO_SPEED),
-                        Enemy::new(10.6 * block_size as f32, 6.0 * block_size as f32, TurnPreference::Right, ZERO_SPEED),
+                        Enemy::new(2.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, ZERO_SPEED, EnemyType::Debt),
+                        Enemy::new(5.8 * block_size as f32, 7.7 * block_size as f32, TurnPreference::Left, ZERO_SPEED, EnemyType::Debt),
+                        Enemy::new(1.6 * block_size as f32, 3.8 * block_size as f32, TurnPreference::Right, ZERO_SPEED, EnemyType::Debt),
+                        Enemy::new(3.0 * block_size as f32, 1.7 * block_size as f32, TurnPreference::Left, ZERO_SPEED, EnemyType::Debt),
+                        Enemy::new(7.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Right, ZERO_SPEED, EnemyType::Debt),
+                        Enemy::new(11.5 * block_size as f32, 2.4 * block_size as f32, TurnPreference::Left, ZERO_SPEED, EnemyType::Debt),
+                        Enemy::new(10.6 * block_size as f32, 2.4 * block_size as f32, TurnPreference::Right, ZERO_SPEED, EnemyType::Debt),
+                        Enemy::new(5.6 * block_size as f32, 3.2 * block_size as f32, TurnPreference::Left, ZERO_SPEED, EnemyType::Debt),
+                        Enemy::new(4.5 * block_size as f32, 5.6 * block_size as f32, TurnPreference::Right, ZERO_SPEED, EnemyType::Debt),
+                        Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, ZERO_SPEED, EnemyType::Debt),
+                        Enemy::new(10.6 * block_size as f32, 6.0 * block_size as f32, TurnPreference::Right, ZERO_SPEED, EnemyType::Debt),
                     ]);
                     collectables = Some(vec![
                         Collectable::new(1.5 * block_size as f32, 1.5 * block_size as f32, 'm'),
@@ -380,11 +375,11 @@ fn main() {
                     max_score = 6;
                     const SPEED: f32 = 250.0;
                     enemies = Some(vec![
-                        Enemy::new(1.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Right, SPEED),
-                        Enemy::new(7.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Left, SPEED),
-                        Enemy::new(1.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, SPEED),
-                        Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, SPEED),
-                        Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, SPEED),
+                        Enemy::new(1.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Right, SPEED, EnemyType::Police),
+                        Enemy::new(7.5 * block_size as f32, 1.5 * block_size as f32, TurnPreference::Left, SPEED, EnemyType::Police),
+                        Enemy::new(1.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Right, SPEED, EnemyType::Police),
+                        Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, SPEED, EnemyType::Police),
+                        Enemy::new(7.5 * block_size as f32, 5.5 * block_size as f32, TurnPreference::Left, SPEED, EnemyType::Police),
                         ]);
                     collectables = Some(vec![
                         Collectable::new(1.5 * block_size as f32, 1.5 * block_size as f32, 'm'),
@@ -411,8 +406,6 @@ fn main() {
                     
                     framebuffer.clear();
                     
-                    let screen_center_x = (window_width / 2) as f32;
-                    let screen_center_y = (window_height / 2) as f32;
                     let half_height = (window_height / 2) as i32;
                     let floor_color = Color::new(51, 25, 0, 255);
                     for y in half_height..window_height as i32 {

@@ -8,6 +8,12 @@ pub enum TurnPreference {
     Right,
 }
 
+#[derive(Clone, Copy, PartialEq)] // Agregamos PartialEq
+pub enum EnemyType {
+    Police,
+    Debt,
+}
+
 pub struct Enemy {
     pub pos: Vector2,
     pub texture_key: char,
@@ -15,25 +21,38 @@ pub struct Enemy {
     velocity: Vector2,
     turn_preference: TurnPreference,
     speed: f32, //velocidad del enemigo
+    enemy_type: EnemyType,
+    animation_frame: char, // Para manejar la animación de policía
 }
 
 impl Enemy {
-    pub fn new(x: f32, y: f32, turn_preference: TurnPreference, speed: f32) -> Self {
+    pub fn new(x: f32, y: f32, turn_preference: TurnPreference, speed: f32, enemy_type: EnemyType) -> Self {
+        let texture_key = match enemy_type {
+            EnemyType::Police => 'e',
+            EnemyType::Debt => 'd', // Sprite de deuda
+        };
+        
         Enemy {
             pos: Vector2::new(x, y),
-            texture_key: 'e',
+            texture_key,
             animation_timer: 0.0,
             velocity: Vector2::new(1.0, 0.0),
             turn_preference,
             speed,
+            enemy_type,
+            animation_frame: 'e', // Para la animación de policía
         }
     }
 
     pub fn update(&mut self, delta_time: f32, maze: &Maze, block_size: usize) {
-        self.animation_timer += delta_time;
-        if self.animation_timer > 0.4 {
-            self.animation_timer = 0.0;
-            self.texture_key = if self.texture_key == 'e' { 'f' } else { 'e' };
+        // Solo animar si es un enemigo de policía
+        if self.enemy_type == EnemyType::Police {
+            self.animation_timer += delta_time;
+            if self.animation_timer > 0.4 {
+                self.animation_timer = 0.0;
+                self.animation_frame = if self.animation_frame == 'e' { 'f' } else { 'e' };
+                self.texture_key = self.animation_frame;
+            }
         }
 
         let check_pos = self.pos + self.velocity * (block_size as f32 / 4.0);
